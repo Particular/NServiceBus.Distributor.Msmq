@@ -87,16 +87,28 @@ namespace NServiceBus.Distributor.MSMQ
 
                 var address = MsmqUtilities.GetIndependentAddressForQueue(availableWorker.ResponseQueue);
                 string registeredWorkerSessionId;
+                var sessionId = availableWorker.Label;
+
+                if (String.IsNullOrEmpty(sessionId)) //Old worker
+                {
+                    Logger.InfoFormat("Using an old version Worker at '{0}'.", address);
+                    return new Worker(address, sessionId);
+                }
 
                 if (!registeredWorkerAddresses.TryGetValue(address, out registeredWorkerSessionId))
                 {
-                    return NextAvailableWorker();
-                }
+                    // Distributor could have been restarted, hence the reason we do not have the worker registered.
+                    registeredWorkerAddresses[address] = sessionId;
 
-                var sessionId = availableWorker.Label;
+                    Logger.InfoFormat("Worker at '{0}' has been re-registered with distributor.", address);
+
+                    return new Worker(address, sessionId);
+                }
 
                 if (registeredWorkerSessionId != sessionId)
                 {
+                    Logger.InfoFormat("Session ids for Worker at '{0}' do not match, so poping next available worker.", address);
+
                     return NextAvailableWorker();
                 }
 
@@ -114,10 +126,16 @@ namespace NServiceBus.Distributor.MSMQ
 
             if (!registeredWorkerAddresses.TryGetValue(worker.Address, out sessionId))
             {
-                // Drop ready message as this worker has been disconnected 
-                // or the worker send us a message before the "WorkerStarting" message
+                // The worker send us a message before the "WorkerStarting" message
+                Logger.InfoFormat("Dropping ready message from Worker at '{0}', because this worker worker sent us a message before the 'WorkerStarting' message.", worker.Address);
 
-                Logger.InfoFormat("Dropping ready message from worker '{0}', because this worker has been disconnected.", worker.Address);
+                return;
+            }
+
+            if (sessionId.Equals("disconnected"))
+            {
+                // Drop ready message as this worker has been disconnected 
+                Logger.InfoFormat("Dropping ready message from Worker at '{0}', because this worker has been disconnected.", worker.Address);
 
                 return;
             }
@@ -127,19 +145,19 @@ namespace NServiceBus.Distributor.MSMQ
                 // Drop ready message as this message is an extra message that could have been sent because of
                 // https://github.com/Particular/NServiceBus/issues/978
 
-                Logger.InfoFormat("Dropping ready message from worker {0}, because this ready message is from an old worker sessionid.", worker.Address);
+                Logger.InfoFormat("Dropping ready message from Worker at {0}, because this ready message is from an old worker sessionid.", worker.Address);
 
                 return;
             }
 
-            Logger.InfoFormat("Worker '{0}' is available to take on more work.", worker.Address);
+            Logger.InfoFormat("Worker at '{0}' is available to take on more work.", worker.Address);
 
             AddWorkerToStorageQueue(worker);
         }
 
         public void UnregisterWorker(Address address)
         {
-            registeredWorkerAddresses.Remove(address);
+            registeredWorkerAddresses[address] = "disconnected";
         }
 
         public void RegisterNewWorker(Worker worker, int capacity)
@@ -154,7 +172,7 @@ namespace NServiceBus.Distributor.MSMQ
 
             registeredWorkerAddresses[worker.Address] = worker.SessionId;
 
-            Logger.InfoFormat("Worker '{0}' has been registered with {1} capacity.", worker.Address, capacity);
+            Logger.InfoFormat("Worker at '{0}' has been registered with {1} capacity.", worker.Address, capacity);
         }
 
         [ObsoleteEx(RemoveInVersion = "6.0", TreatAsErrorFromVersion = "6.0")]
