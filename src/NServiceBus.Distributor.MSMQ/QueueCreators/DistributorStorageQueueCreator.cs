@@ -1,6 +1,5 @@
 namespace NServiceBus.Distributor.MSMQ.QueueCreators
 {
-    using Settings;
     using Unicast.Queuing;
 
     /// <summary>
@@ -13,8 +12,7 @@ namespace NServiceBus.Distributor.MSMQ.QueueCreators
         /// </summary>
         public DistributorStorageQueueCreator()
         {
-            disabled = !Configure.Instance.Configurer.HasComponent<MsmqWorkerAvailabilityManager>() || 
-                        SettingsHolder.Get<int>("Distributor.Version") != 2;
+            disabled = !Configure.Instance.Configurer.HasComponent<MsmqWorkerAvailabilityManager>();
 
             if (disabled)
             {

@@ -4,7 +4,6 @@ namespace NServiceBus.Distributor.MSMQ
     using Logging;
     using ReadyMessages;
     using Satellites;
-    using Settings;
     using Transports;
     using Unicast.Transport;
 
@@ -17,7 +16,7 @@ namespace NServiceBus.Distributor.MSMQ
         static DistributorSatellite()
         {
             Address = MasterNodeConfiguration.GetMasterNodeAddress();
-            Disable = !ConfigureMSMQDistributor.DistributorConfiguredToRunOnThisEndpoint() || SettingsHolder.Get<int>("Distributor.Version") != 2;
+            Disable = !ConfigureMSMQDistributor.DistributorConfiguredToRunOnThisEndpoint();
         }
 
         /// <summary>
