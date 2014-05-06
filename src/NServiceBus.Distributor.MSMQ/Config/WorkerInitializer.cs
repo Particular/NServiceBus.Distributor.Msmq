@@ -8,7 +8,7 @@ namespace NServiceBus.Distributor.MSMQ.Config
     {
         public static void Init()
         {
-            var masterNodeAddress = Configure.Instance.GetMasterNodeAddress();
+            var masterNodeAddress = MasterNodeConfiguration.GetMasterNodeAddress();
             var distributorControlAddress = masterNodeAddress.SubScope("distributor.control");
 
             var unicastBusConfig = Configure.GetConfigSection<UnicastBusConfig>();

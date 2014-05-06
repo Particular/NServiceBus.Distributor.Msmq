@@ -7,6 +7,7 @@ namespace NServiceBus
     using Logging;
     using Settings;
 
+
     /// <summary>
     /// Extension methods to configure Distributor.
     /// </summary>
@@ -62,7 +63,7 @@ namespace NServiceBus
 
         static void ValidateMasterNodeConfigurationForWorker()
         {
-            var masterNodeName = Configure.Instance.GetMasterNode();
+            var masterNodeName = MasterNodeConfiguration.GetMasterNode();
 
             if (masterNodeName == null)
             {

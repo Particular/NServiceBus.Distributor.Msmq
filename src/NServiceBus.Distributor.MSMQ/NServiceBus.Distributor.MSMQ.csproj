@@ -26,7 +26,8 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DocumentationFile>..\..\binaries\NServiceBus.Distributor.MSMQ.XML</DocumentationFile>
     <UseVSHostingProcess>false</UseVSHostingProcess>
-    <NoWarn>612,618</NoWarn>
+    <NoWarn>
+    </NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -66,6 +67,7 @@
     <Compile Include="DistributorSatellite.cs" />
     <Compile Include="IWorkerAvailabilityManager.cs" />
     <Compile Include="Config\AdjustSettingsForNonMasterNodes.cs" />
+    <Compile Include="MasterNodeConfiguration.cs" />
     <Compile Include="MsmqWorkerAvailabilityManager.cs" />
     <Compile Include="Profiles\DistributorProfileHandler.cs" />
     <Compile Include="Profiles\MasterProfileHandler.cs" />

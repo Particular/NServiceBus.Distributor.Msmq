@@ -16,7 +16,7 @@ namespace NServiceBus.Distributor.MSMQ
     {
         static DistributorSatellite()
         {
-            Address = Configure.Instance.GetMasterNodeAddress();
+            Address = MasterNodeConfiguration.GetMasterNodeAddress();
             Disable = !ConfigureMSMQDistributor.DistributorConfiguredToRunOnThisEndpoint() || SettingsHolder.Get<int>("Distributor.Version") != 2;
         }
 
