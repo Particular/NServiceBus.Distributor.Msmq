@@ -3,6 +3,7 @@ namespace NServiceBus.Distributor.MSMQ
     using System;
     using ReadyMessages;
     using Satellites;
+    using Settings;
     using Unicast.Transport;
 
     /// <summary>
@@ -10,17 +11,14 @@ namespace NServiceBus.Distributor.MSMQ
     /// </summary>
     internal class DistributorReadyMessageProcessor : IAdvancedSatellite
     {
-        static DistributorReadyMessageProcessor()
-        {
-            Address = MasterNodeConfiguration.GetMasterNodeAddress().SubScope("distributor.control");
-            Disable = !ConfigureMSMQDistributor.DistributorConfiguredToRunOnThisEndpoint();
-        }
+        readonly IWorkerAvailabilityManager workerAvailabilityManager;
 
-        /// <summary>
-        ///     Sets the <see cref="IWorkerAvailabilityManager" /> implementation that will be
-        ///     used to determine whether or not a worker is available.
-        /// </summary>
-        public IWorkerAvailabilityManager WorkerAvailabilityManager { get; set; }
+        public DistributorReadyMessageProcessor(IWorkerAvailabilityManager workerAvailabilityManager, ReadOnlySettings settings)
+        {
+            this.workerAvailabilityManager = workerAvailabilityManager;
+            address = MasterNodeConfiguration.GetMasterNodeAddress(settings).SubScope("distributor.control");
+            disable = !settings.GetOrDefault<bool>("Distributor.Enabled");
+        }
 
         /// <summary>
         ///     This method is called when a message is available to be processed.
@@ -30,7 +28,7 @@ namespace NServiceBus.Distributor.MSMQ
         /// </param>
         public bool Handle(TransportMessage message)
         {
-            if (!message.IsControlMessage())
+            if (!IsControlMessage(message))
             {
                 return true;
             }
@@ -51,7 +49,7 @@ namespace NServiceBus.Distributor.MSMQ
         /// </summary>
         public Address InputAddress
         {
-            get { return Address; }
+            get { return address; }
         }
 
         /// <summary>
@@ -59,7 +57,7 @@ namespace NServiceBus.Distributor.MSMQ
         /// </summary>
         public bool Disabled
         {
-            get { return Disable; }
+            get { return disable; }
         }
 
         /// <summary>
@@ -81,16 +79,22 @@ namespace NServiceBus.Distributor.MSMQ
             return receiver =>
             {
                 //we don't need any DTC for the distributor
-                receiver.TransactionSettings.DontUseDistributedTransactions = true;
+                receiver.TransactionSettings.SuppressDistributedTransactions = true;
                 receiver.TransactionSettings.DoNotWrapHandlersExecutionInATransactionScope = true;
             };
+        }
+
+        bool IsControlMessage(TransportMessage transportMessage)
+        {
+            return transportMessage.Headers != null &&
+                   transportMessage.Headers.ContainsKey(NServiceBus.Headers.ControlMessageHeader);
         }
 
         void HandleDisconnectMessage(TransportMessage controlMessage)
         {
             var workerAddress = Address.Parse(controlMessage.Headers[Headers.UnregisterWorker]);
 
-            WorkerAvailabilityManager.UnregisterWorker(workerAddress);
+            workerAvailabilityManager.UnregisterWorker(workerAddress);
         }
 
         void HandleControlMessage(TransportMessage controlMessage)
@@ -107,15 +111,15 @@ namespace NServiceBus.Distributor.MSMQ
             {
                 var capacity = int.Parse(controlMessage.Headers[Headers.WorkerCapacityAvailable]);
 
-                WorkerAvailabilityManager.RegisterNewWorker(new Worker(replyToAddress, messageSessionId), capacity);
+                workerAvailabilityManager.RegisterNewWorker(new Worker(replyToAddress, messageSessionId), capacity);
 
                 return;
             }
 
-            WorkerAvailabilityManager.WorkerAvailable(new Worker(replyToAddress, messageSessionId));
+            workerAvailabilityManager.WorkerAvailable(new Worker(replyToAddress, messageSessionId));
         }
 
-        static readonly Address Address;
-        static readonly bool Disable;
+        readonly Address address;
+        readonly bool disable;
     }
 }

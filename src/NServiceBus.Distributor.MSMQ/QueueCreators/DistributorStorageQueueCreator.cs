@@ -10,9 +10,9 @@ namespace NServiceBus.Distributor.MSMQ.QueueCreators
         /// <summary>
         ///     Holds storage queue address.
         /// </summary>
-        public DistributorStorageQueueCreator()
+        public DistributorStorageQueueCreator(Configure config)
         {
-            disabled = !Configure.Instance.Configurer.HasComponent<MsmqWorkerAvailabilityManager>();
+            disabled = !config.Configurer.HasComponent<MsmqWorkerAvailabilityManager>();
 
             if (disabled)
             {
@@ -22,20 +22,17 @@ namespace NServiceBus.Distributor.MSMQ.QueueCreators
             address = Address.Local.SubScope("distributor.storage");
         }
 
+        public bool ShouldCreateQueue()
+        {
+            return !disabled;
+        }
+
         /// <summary>
         ///     Address of Distributor storage queue.
         /// </summary>
         public Address Address
         {
             get { return address; }
-        }
-
-        /// <summary>
-        ///     Disabling the creation of the distributor storage queue
-        /// </summary>
-        public bool IsDisabled
-        {
-            get { return disabled; }
         }
 
         Address address;

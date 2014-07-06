@@ -7,7 +7,6 @@ namespace NServiceBus.Distributor.MSMQ
     using System.Messaging;
     using System.Threading;
     using Logging;
-    using Settings;
     using Transports.Msmq;
 
     /// <summary>
@@ -16,8 +15,11 @@ namespace NServiceBus.Distributor.MSMQ
     /// </summary>
     internal class MsmqWorkerAvailabilityManager : IWorkerAvailabilityManager, IDisposable
     {
-        public MsmqWorkerAvailabilityManager()
+        readonly MsmqUnitOfWork unitOfWork;
+
+        public MsmqWorkerAvailabilityManager(Configure configure, MsmqUnitOfWork unitOfWork)
         {
+            this.unitOfWork = unitOfWork;
             var storageQueueAddress = Address.Local.SubScope("distributor.storage");
             var path = MsmqUtilities.GetFullPath(storageQueueAddress);
             var messageReadPropertyFilter = new MessagePropertyFilter
@@ -32,16 +34,11 @@ namespace NServiceBus.Distributor.MSMQ
                 MessageReadPropertyFilter = messageReadPropertyFilter
             };
 
-            if ((!storageQueue.Transactional) && (SettingsHolder.Get<bool>("Transactions.Enabled")))
+            if ((!storageQueue.Transactional) && (configure.Settings.Get<bool>("Transactions.Enabled")))
             {
                 throw new Exception(string.Format("Queue [{0}] must be transactional.", path));
             }
         }
-
-        /// <summary>
-        ///     Msmq unit of work to be used in non DTC mode <see cref="MsmqUnitOfWork" />.
-        /// </summary>
-        public MsmqUnitOfWork UnitOfWork { get; set; }
 
         public void Dispose()
         {
@@ -66,9 +63,9 @@ namespace NServiceBus.Distributor.MSMQ
 
                 try
                 {
-                    if (UnitOfWork.HasActiveTransaction())
+                    if (unitOfWork.HasActiveTransaction())
                     {
-                        availableWorker = storageQueue.Receive(MaxTimeToWaitForAvailableWorker, UnitOfWork.Transaction);
+                        availableWorker = storageQueue.Receive(MaxTimeToWaitForAvailableWorker, unitOfWork.Transaction);
                     }
                     else
                     {
@@ -184,9 +181,9 @@ namespace NServiceBus.Distributor.MSMQ
 
                 foreach (var m in messages.Where(m => MsmqUtilities.GetIndependentAddressForQueue(m.ResponseQueue) == address))
                 {
-                    if (UnitOfWork.HasActiveTransaction())
+                    if (unitOfWork.HasActiveTransaction())
                     {
-                        storageQueue.ReceiveById(m.Id, UnitOfWork.Transaction);
+                        storageQueue.ReceiveById(m.Id, unitOfWork.Transaction);
                     }
                     else
                     {
@@ -208,9 +205,9 @@ namespace NServiceBus.Distributor.MSMQ
 
                 for (var i = 0; i < capacity; i++)
                 {
-                    if (UnitOfWork.HasActiveTransaction())
+                    if (unitOfWork.HasActiveTransaction())
                     {
-                        storageQueue.Send(message, UnitOfWork.Transaction);
+                        storageQueue.Send(message, unitOfWork.Transaction);
                     }
                     else
                     {

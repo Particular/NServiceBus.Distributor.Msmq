@@ -8,14 +8,14 @@
 
     internal class DistributorProfileHandler : IHandleProfile<MSMQDistributor>, IWantTheListOfActiveProfiles
     {
-        public void ProfileActivated()
+        public void ProfileActivated(Configure config)
         {
             if (ActiveProfiles.Contains(typeof(MSMQWorker)))
             {
                 throw new ConfigurationErrorsException("Distributor profile and Worker profile should not coexist.");
             }
 
-            Configure.Instance.RunMSMQDistributor(false);
+            config.RunMSMQDistributor(false);
         }
 
         public IEnumerable<Type> ActiveProfiles { get; set; }

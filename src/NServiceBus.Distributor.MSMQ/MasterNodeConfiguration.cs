@@ -3,23 +3,19 @@ namespace NServiceBus
     using System;
     using System.Configuration;
     using Config;
+    using Settings;
 
     static class MasterNodeConfiguration
     {
-        public static bool HasMasterNode()
+        public static string GetMasterNode(ReadOnlySettings settings)
         {
-            return !string.IsNullOrEmpty(GetMasterNode());
-        }
-
-        public static string GetMasterNode()
-        {
-            var section = Configure.GetConfigSection<MasterNodeConfig>();
+            var section = settings.GetConfigSection<MasterNodeConfig>();
             return section != null ? section.Node : null;
         }
 
-        public static Address GetMasterNodeAddress()
+        public static Address GetMasterNodeAddress(ReadOnlySettings settings)
         {
-            var unicastBusConfig = Configure.GetConfigSection<UnicastBusConfig>();
+            var unicastBusConfig = settings.GetConfigSection<UnicastBusConfig>();
 
             //allow users to override data address in config
             if (unicastBusConfig != null && !string.IsNullOrWhiteSpace(unicastBusConfig.DistributorDataAddress))
@@ -27,16 +23,16 @@ namespace NServiceBus
                 return Address.Parse(unicastBusConfig.DistributorDataAddress);
             }
 
-            var masterNode = GetMasterNode();
+            var masterNode = GetMasterNode(settings);
 
             if (string.IsNullOrWhiteSpace(masterNode))
             {
-                return Address.Parse(Configure.EndpointName);
+                return Address.Parse(settings.EndpointName());
             }
 
             ValidateHostName(masterNode);
 
-            return new Address(Configure.EndpointName, masterNode);
+            return new Address(settings.EndpointName(), masterNode);
         }
 
         private static void ValidateHostName(string hostName)

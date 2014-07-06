@@ -1,11 +1,12 @@
 namespace NServiceBus.Distributor.MSMQ.ReadyMessages
 {
     using System;
+    using Features;
     using Transports;
     using Unicast;
     using Unicast.Transport;
 
-    internal class ReadyMessageSender : IWantToRunWhenBusStartsAndStops
+    internal class ReadyMessageSender : FeatureStartupTask
     {
         public ISendMessages MessageSender { get; set; }
 
@@ -13,13 +14,10 @@ namespace NServiceBus.Distributor.MSMQ.ReadyMessages
 
         public Address DistributorControlAddress { get; set; }
 
-        public void Start()
-        {
-            if (!ConfigureMSMQDistributor.WorkerRunsOnThisEndpoint())
-            {
-                return;
-            }
+        public Configure Configure { get; set; }
 
+        protected override void OnStart()
+        {
             transport = Bus.Transport;
             var capacityAvailable = transport.MaximumConcurrencyLevel;
             SendReadyMessage(workerSessionId, capacityAvailable, true);
@@ -27,13 +25,9 @@ namespace NServiceBus.Distributor.MSMQ.ReadyMessages
             transport.FinishedMessageProcessing += TransportOnFinishedMessageProcessing;
         }
 
-        public void Stop()
+        protected override void OnStop()
         {
-            //transport will be null if !WorkerRunsOnThisEndpoint
-            if (transport != null)
-            {
-                transport.FinishedMessageProcessing -= TransportOnFinishedMessageProcessing;
-            }
+            transport.FinishedMessageProcessing -= TransportOnFinishedMessageProcessing;
         }
 
         void TransportOnFinishedMessageProcessing(object sender, FinishedMessageProcessingEventArgs e)
@@ -53,7 +47,7 @@ namespace NServiceBus.Distributor.MSMQ.ReadyMessages
         void SendReadyMessage(string sessionId, int capacityAvailable = 1, bool isStarting = false)
         {
             //we use the actual address to make sure that the worker inside the master node will check in correctly
-            var readyMessage = ControlMessage.Create(Bus.InputAddress);
+            var readyMessage = ControlMessage.Create();
 
             readyMessage.Headers.Add(Headers.WorkerCapacityAvailable, capacityAvailable.ToString());
             readyMessage.Headers.Add(Headers.WorkerSessionId, sessionId);
@@ -63,7 +57,10 @@ namespace NServiceBus.Distributor.MSMQ.ReadyMessages
                 readyMessage.Headers.Add(Headers.WorkerStarting, Boolean.TrueString);
             }
 
-            MessageSender.Send(readyMessage, DistributorControlAddress);
+            MessageSender.Send(readyMessage, new SendOptions(DistributorControlAddress)
+            {
+                ReplyToAddress = Bus.InputAddress
+            });
         }
 
         ITransport transport;

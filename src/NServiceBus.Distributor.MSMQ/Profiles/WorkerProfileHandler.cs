@@ -8,7 +8,7 @@ namespace NServiceBus.Distributor.MSMQ.Profiles
 
     internal class WorkerProfileHandler : IHandleProfile<MSMQWorker>, IWantTheListOfActiveProfiles
     {
-        public void ProfileActivated()
+        public void ProfileActivated(Configure config)
         {
             if (ActiveProfiles.Contains(typeof(MSMQMaster)))
             {
@@ -20,7 +20,7 @@ namespace NServiceBus.Distributor.MSMQ.Profiles
                 throw new ConfigurationErrorsException("Worker profile and Distributor profile should not coexist.");
             }
 
-            Configure.Instance.EnlistWithMSMQDistributor();
+            config.EnlistWithMSMQDistributor();
         }
 
         public IEnumerable<Type> ActiveProfiles { get; set; }

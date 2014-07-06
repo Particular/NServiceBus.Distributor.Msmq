@@ -13,16 +13,6 @@ namespace NServiceBus
     /// </summary>
     public static class ConfigureMSMQDistributor
     {
-        internal static bool DistributorConfiguredToRunOnThisEndpoint()
-        {
-            return SettingsHolder.GetOrDefault<bool>("Distributor.Enabled");
-        }
-
-        internal static bool WorkerRunsOnThisEndpoint()
-        {
-            return SettingsHolder.GetOrDefault<bool>("Worker.Enabled");
-        }
-
         /// <summary>
         /// Configure this endpoint as both a Distributor and a Worker.
         /// </summary>
@@ -38,11 +28,12 @@ namespace NServiceBus
         /// <param name="withWorker"><value>true</value> if this endpoint should enlist as a worker, otherwise <value>false</value>. Default is <value>true</value>.</param>
         public static Configure RunMSMQDistributor(this Configure config, bool withWorker = true)
         {
-            Distributor.MSMQ.Config.DistributorInitializer.Init(withWorker);
+            config.EnableFeature<Distributor.MSMQ.Distributor>();
 
             if (withWorker)
             {
-                Distributor.MSMQ.Config.WorkerInitializer.Init();
+                config.Settings.Set("Distributor.WithWorker", true);
+                config.EnableFeature<Distributor.MSMQ.WorkerNode>();
             }
 
 
@@ -54,16 +45,16 @@ namespace NServiceBus
         /// </summary>
         public static Configure EnlistWithMSMQDistributor(this Configure config)
         {
-            ValidateMasterNodeConfigurationForWorker();
+            ValidateMasterNodeConfigurationForWorker(config.Settings);
 
-            Distributor.MSMQ.Config.WorkerInitializer.Init();
+            config.EnableFeature<Distributor.MSMQ.WorkerNode>();
 
             return config;
         }
 
-        static void ValidateMasterNodeConfigurationForWorker()
+        static void ValidateMasterNodeConfigurationForWorker(SettingsHolder settings)
         {
-            var masterNodeName = MasterNodeConfiguration.GetMasterNode();
+            var masterNodeName = MasterNodeConfiguration.GetMasterNode(settings);
 
             if (masterNodeName == null)
             {

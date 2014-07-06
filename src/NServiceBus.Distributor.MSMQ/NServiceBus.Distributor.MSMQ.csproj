@@ -48,9 +48,6 @@
       <HintPath>..\packages\Janitor.Fody\Lib\portable-net4+sl4+wp7+win8+MonoAndroid16+MonoTouch40\Janitor.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="NServiceBus">
-      <HintPath>..\packages\NServiceBus.Interfaces\lib\net45\NServiceBus.dll</HintPath>
-    </Reference>
     <Reference Include="NServiceBus.Core">
       <HintPath>..\packages\NServiceBus\lib\net45\NServiceBus.Core.dll</HintPath>
     </Reference>
@@ -64,13 +61,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigureMSMQDistributor.cs" />
-    <Compile Include="Config\DistributorInitializer.cs" />
-    <Compile Include="Config\WorkerInitializer.cs" />
+    <Compile Include="Features\Distributor.cs" />
+    <Compile Include="Features\WorkerNode.cs" />
     <Compile Include="DistributorReadyMessageProcessor.cs" />
     <Compile Include="DistributorSatellite.cs" />
     <Compile Include="IWorkerAvailabilityManager.cs" />
-    <Compile Include="Config\AdjustSettingsForNonMasterNodes.cs" />
     <Compile Include="MasterNodeConfiguration.cs" />
+    <Compile Include="MsmqUtilities.cs" />
     <Compile Include="MsmqWorkerAvailabilityManager.cs" />
     <Compile Include="Profiles\DistributorProfileHandler.cs" />
     <Compile Include="Profiles\MasterProfileHandler.cs" />
