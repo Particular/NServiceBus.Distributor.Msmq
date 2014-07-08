@@ -16,9 +16,6 @@
             }
 
             config.AsMSMQMasterNode();
-
-            // TODO: Do I some how enable the gateway!
-            //Feature.EnableByDefault<Gateway>();
         }
 
         public IEnumerable<Type> ActiveProfiles { get; set; }

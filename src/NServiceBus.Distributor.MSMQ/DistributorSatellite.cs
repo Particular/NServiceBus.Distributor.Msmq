@@ -13,7 +13,7 @@ namespace NServiceBus.Distributor.MSMQ
     ///     Provides functionality for distributing messages from a bus
     ///     to multiple workers when using a unicast transport.
     /// </summary>
-    internal class DistributorSatellite : IAdvancedSatellite
+    class DistributorSatellite : IAdvancedSatellite
     {
         readonly ISendMessages messageSender;
         readonly IWorkerAvailabilityManager workerManager;

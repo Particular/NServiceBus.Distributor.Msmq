@@ -50,7 +50,7 @@ namespace NServiceBus.Distributor.MSMQ
             }
             else
             {
-                context.Container.ConfigureProperty<WorkerQueueCreator>(p => p.WorkerEnabled, true);
+                context.Container.ConfigureProperty<WorkerQueueCreator>(p => p.WorkerEnabled, true).;
             }
 
             context.Container.ConfigureComponent<ReadyMessageSender>(DependencyLifecycle.SingleInstance)

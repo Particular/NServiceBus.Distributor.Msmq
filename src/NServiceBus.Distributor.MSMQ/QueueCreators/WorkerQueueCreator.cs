@@ -5,7 +5,7 @@ namespace NServiceBus.Distributor.MSMQ.QueueCreators
     /// <summary>
     ///     Signal to create the queue for the worker
     /// </summary>
-    internal class WorkerQueueCreator : IWantQueueCreated
+    class WorkerQueueCreator : IWantQueueCreated
     {
         // ReSharper disable UnassignedField.Compiler
 #pragma warning disable 649
@@ -23,9 +23,6 @@ namespace NServiceBus.Distributor.MSMQ.QueueCreators
         /// <summary>
         ///     Address of worker queue
         /// </summary>
-        public Address Address
-        {
-            get { return Address.Local.SubScope("Worker"); }
-        }
+        public Address Address { get; set; }
     }
 }

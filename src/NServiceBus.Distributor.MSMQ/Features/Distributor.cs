@@ -29,11 +29,13 @@ namespace NServiceBus.Distributor.MSMQ
             if (!context.Container.HasComponent<WorkerQueueCreator>())
             {
                 context.Container.ConfigureComponent<WorkerQueueCreator>(DependencyLifecycle.InstancePerCall)
-                    .ConfigureProperty(p => p.DistributorEnabled, true);
+                    .ConfigureProperty(p => p.DistributorEnabled, true)
+                    .ConfigureProperty(p => p.Address, applicativeInputQueue);
             }
             else
             {
-                context.Container.ConfigureProperty<WorkerQueueCreator>(p => p.DistributorEnabled, true);
+                context.Container.ConfigureProperty<WorkerQueueCreator>(p => p.DistributorEnabled, true)
+                    .ConfigureProperty<WorkerQueueCreator>(p => p.Address, applicativeInputQueue);
             }
 
             if (!context.Container.HasComponent<IWorkerAvailabilityManager>())
