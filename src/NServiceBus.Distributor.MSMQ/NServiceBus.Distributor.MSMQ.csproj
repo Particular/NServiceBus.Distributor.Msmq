@@ -80,7 +80,6 @@
     <Compile Include="QueueCreators\WorkerQueueCreator.cs" />
     <Compile Include="ReadyMessages\Headers.cs" />
     <Compile Include="ReadyMessages\ReadyMessageSender.cs" />
-    <Compile Include="ReadyMessages\ReturnAddressRewriter.cs" />
     <Compile Include="Worker.cs" />
   </ItemGroup>
   <ItemGroup>

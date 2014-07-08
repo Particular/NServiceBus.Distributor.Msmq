@@ -1,7 +1,10 @@
 namespace NServiceBus.Distributor.MSMQ
 {
+    using System;
     using Features;
     using NServiceBus.Config;
+    using Pipeline;
+    using Pipeline.Contexts;
     using QueueCreators;
     using ReadyMessages;
 
@@ -50,7 +53,7 @@ namespace NServiceBus.Distributor.MSMQ
             }
             else
             {
-                context.Container.ConfigureProperty<WorkerQueueCreator>(p => p.WorkerEnabled, true).;
+                context.Container.ConfigureProperty<WorkerQueueCreator>(p => p.WorkerEnabled, true);
             }
 
             context.Container.ConfigureComponent<ReadyMessageSender>(DependencyLifecycle.SingleInstance)
@@ -58,8 +61,29 @@ namespace NServiceBus.Distributor.MSMQ
 
             Address.OverridePublicReturnAddress(masterNodeAddress);
 
-            context.Container.ConfigureComponent<ReturnAddressRewriter>(DependencyLifecycle.SingleInstance)
+            context.Pipeline.Register<ReturnAddressRewriterBehavior.Registration>();
+            context.Container.ConfigureComponent<ReturnAddressRewriterBehavior>(DependencyLifecycle.InstancePerCall)
                 .ConfigureProperty(r => r.DistributorDataAddress, masterNodeAddress);
+        }
+    }
+
+    class ReturnAddressRewriterBehavior : IBehavior<OutgoingContext>
+    {
+        public Address DistributorDataAddress { get; set; }
+
+        public void Invoke(OutgoingContext context, Action next)
+        {
+            context.OutgoingLogicalMessage.Headers.Add(NServiceBus.Headers.ReplyToAddress, DistributorDataAddress.ToString());
+        }
+
+        public class Registration : RegisterStep
+        {
+            public Registration()
+                : base("ReturnAddressRewriter", typeof(ReturnAddressRewriterBehavior), "Rewrites the return address for a worker.")
+            {
+                InsertAfter(WellKnownStep.MutateOutgoingTransportMessage);
+                InsertBefore(WellKnownStep.DispatchMessageToTransport);
+            }
         }
     }
 }

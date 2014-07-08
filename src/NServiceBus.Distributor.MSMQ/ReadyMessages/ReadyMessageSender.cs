@@ -14,8 +14,6 @@ namespace NServiceBus.Distributor.MSMQ.ReadyMessages
 
         public Address DistributorControlAddress { get; set; }
 
-        public Configure Configure { get; set; }
-
         protected override void OnStart()
         {
             transport = Bus.Transport;
