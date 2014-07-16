@@ -59,7 +59,7 @@ namespace NServiceBus.Distributor.MSMQ
             {
                 Message availableWorker;
 
-                if (!Monitor.TryEnter(lockObject))
+                if (!storageLock.TryEnterReadLock(MaxTimeToWaitForAvailableWorker))
                 {
                     return null;
                 }
@@ -77,7 +77,7 @@ namespace NServiceBus.Distributor.MSMQ
                 }
                 finally
                 {
-                    Monitor.Exit(lockObject);
+                    storageLock.ExitReadLock();
                 }
 
                 if (availableWorker == null)
@@ -114,8 +114,9 @@ namespace NServiceBus.Distributor.MSMQ
 
                 return new Worker(address, sessionId);
             }
-            catch (MessageQueueException)
+            catch (MessageQueueException e)
             {
+                Logger.InfoFormat("NextAvailableWorker Exception", e);
                 return null;
             }
         }
@@ -178,9 +179,13 @@ namespace NServiceBus.Distributor.MSMQ
         [ObsoleteEx(RemoveInVersion = "6.0", TreatAsErrorFromVersion = "6.0")]
         void ClearAvailabilityForWorker(Address address)
         {
-            lock (lockObject)
+            storageLock.EnterWriteLock();
+
+            try
             {
                 var messages = storageQueue.GetAllMessages();
+
+                Logger.InfoFormat("Clearing availability for worker {0} with {1} messages", address, messages.Count());
 
                 foreach (var m in messages.Where(m => MsmqUtilities.GetIndependentAddressForQueue(m.ResponseQueue) == address))
                 {
@@ -193,6 +198,10 @@ namespace NServiceBus.Distributor.MSMQ
                         storageQueue.ReceiveById(m.Id, MessageQueueTransactionType.Automatic);
                     }
                 }
+            }
+            finally
+            {
+                storageLock.ExitWriteLock();
             }
         }
 
@@ -223,7 +232,7 @@ namespace NServiceBus.Distributor.MSMQ
         static readonly ILog Logger = LogManager.GetLogger(typeof(MsmqWorkerAvailabilityManager));
 
         static TimeSpan MaxTimeToWaitForAvailableWorker = TimeSpan.FromSeconds(10);
-        readonly object lockObject = new object();
+        ReaderWriterLockSlim storageLock = new ReaderWriterLockSlim();
         Dictionary<Address, string> registeredWorkerAddresses = new Dictionary<Address, string>();
         MessageQueue storageQueue;
     }
