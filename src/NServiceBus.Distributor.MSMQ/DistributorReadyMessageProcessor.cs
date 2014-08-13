@@ -100,19 +100,12 @@ namespace NServiceBus.Distributor.MSMQ
         void HandleDisconnectMessage(TransportMessage controlMessage)
         {
             var workerAddress = Address.Parse(controlMessage.Headers[Headers.UnregisterWorker]);
-
             workerAvailabilityManager.UnregisterWorker(workerAddress);
         }
 
         void HandleControlMessage(TransportMessage controlMessage)
         {
             var replyToAddress = controlMessage.ReplyToAddress;
-
-            string messageSessionId;
-            if (!controlMessage.Headers.TryGetValue(Headers.WorkerSessionId, out messageSessionId))
-            {
-                messageSessionId = String.Empty;
-            }
 
             if (controlMessage.Headers.ContainsKey(Headers.WorkerStarting))
             {
@@ -122,8 +115,6 @@ namespace NServiceBus.Distributor.MSMQ
 
                 return;
             }
-
-            workerAvailabilityManager.WorkerAvailable(new Worker(replyToAddress, messageSessionId));
         }
 
         readonly Address address;

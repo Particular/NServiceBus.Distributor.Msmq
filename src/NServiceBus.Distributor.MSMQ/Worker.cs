@@ -6,14 +6,12 @@ namespace NServiceBus.Distributor.MSMQ
     public class Worker
     {
         /// <summary>
-        ///     Initializes a new instance of the <see cref="Worker" /> class.
+        /// Initializes a new instance of the <see cref="Worker" /> class.
         /// </summary>
         /// <param name="address">The <see cref="Address" /> of the worker that will accept the dispatched message.</param>
-        /// <param name="sessionId">The current worker sessionId.</param>
-        public Worker(Address address, string sessionId)
+        public Worker(Address address)
         {
             Address = address;
-            SessionId = sessionId;
         }
 
         /// <summary>
@@ -23,7 +21,9 @@ namespace NServiceBus.Distributor.MSMQ
 
         /// <summary>
         ///     The worker current sessionId.
+        ///     Obsolete - The worker current sessionId is no longer being used. 
         /// </summary>
+        [ObsoleteEx(RemoveInVersion = "6.0", TreatAsErrorFromVersion = "6.0")]
         public string SessionId { get; set; }
     }
 }

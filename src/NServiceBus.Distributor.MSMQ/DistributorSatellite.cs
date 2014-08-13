@@ -87,11 +87,7 @@ namespace NServiceBus.Distributor.MSMQ
             }
 
             Logger.DebugFormat("Forwarding message to '{0}'.", worker.Address);
-
-            message.Headers[Headers.WorkerSessionId] = worker.SessionId;
-
             messageSender.Send(message, new SendOptions(worker.Address));
-
             return true;
         }
 

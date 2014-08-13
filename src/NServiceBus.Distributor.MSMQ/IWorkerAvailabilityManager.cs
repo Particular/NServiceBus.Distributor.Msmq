@@ -7,7 +7,8 @@ namespace NServiceBus.Distributor.MSMQ
     public interface IWorkerAvailabilityManager
     {
         /// <summary>
-        ///     Signal that a worker is available to receive a dispatched message.
+        /// Obsolete - No longer needed. 
+        /// Signal that a worker is available to receive a dispatched message.
         /// </summary>
         /// <param name="worker">The worker details.</param>
         void WorkerAvailable(Worker worker);
