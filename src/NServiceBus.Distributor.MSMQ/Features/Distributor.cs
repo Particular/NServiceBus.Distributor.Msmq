@@ -20,8 +20,11 @@ namespace NServiceBus.Distributor.MSMQ
         /// </summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
-            var applicativeInputQueue = Address.Local.SubScope("worker");
+            var endpointName = context.Settings.Get<string>("EndpointName");
 
+            var applicativeInputQueue = Address.Parse(endpointName).SubScope("worker");
+         
+           
             context.Container.ConfigureComponent<UnicastBus>(DependencyLifecycle.SingleInstance)
                 .ConfigureProperty(r => r.InputAddress, applicativeInputQueue)
                 .ConfigureProperty(r => r.DoNotStartTransport, !context.Settings.Get<bool>("Distributor.WithWorker"));

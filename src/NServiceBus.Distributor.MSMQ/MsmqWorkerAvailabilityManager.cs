@@ -15,7 +15,7 @@ namespace NServiceBus.Distributor.MSMQ
     /// </summary>
     internal class MsmqWorkerAvailabilityManager : IWorkerAvailabilityManager, IDisposable
     {
-        readonly MsmqUnitOfWork unitOfWork;
+        MsmqUnitOfWork unitOfWork;
 
         public MsmqWorkerAvailabilityManager(Configure configure, MsmqUnitOfWork unitOfWork)
         {
