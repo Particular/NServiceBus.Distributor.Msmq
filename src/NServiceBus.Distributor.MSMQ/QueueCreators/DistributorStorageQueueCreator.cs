@@ -1,5 +1,6 @@
 namespace NServiceBus.Distributor.MSMQ.QueueCreators
 {
+    using ObjectBuilder.Common;
     using Unicast.Queuing;
 
     /// <summary>
@@ -10,16 +11,16 @@ namespace NServiceBus.Distributor.MSMQ.QueueCreators
         /// <summary>
         ///     Holds storage queue address.
         /// </summary>
-        public DistributorStorageQueueCreator(Configure config)
+        public DistributorStorageQueueCreator(Configure config, IContainer container)
         {
-            disabled = !config.Configurer.HasComponent<MsmqWorkerAvailabilityManager>();
+            disabled = !container.HasComponent(typeof(MsmqWorkerAvailabilityManager));
 
             if (disabled)
             {
                 return;
             }
 
-            address = Address.Local.SubScope("distributor.storage");
+            address = config.LocalAddress.SubScope("distributor.storage");
         }
 
         public bool ShouldCreateQueue()

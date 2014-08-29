@@ -8,7 +8,7 @@ namespace NServiceBus.Distributor.MSMQ.Profiles
 
     internal class WorkerProfileHandler : IHandleProfile<MSMQWorker>, IWantTheListOfActiveProfiles
     {
-        public void ProfileActivated(Configure config)
+        public void ProfileActivated(BusConfiguration config)
         {
             if (ActiveProfiles.Contains(typeof(MSMQMaster)))
             {
@@ -21,6 +21,11 @@ namespace NServiceBus.Distributor.MSMQ.Profiles
             }
 
             config.EnlistWithMSMQDistributor();
+        }
+
+        public void ProfileActivated(Configure config)
+        {
+            
         }
 
         public IEnumerable<Type> ActiveProfiles { get; set; }

@@ -20,7 +20,7 @@ namespace NServiceBus.Distributor.MSMQ
         public MsmqWorkerAvailabilityManager(Configure configure, MsmqUnitOfWork unitOfWork)
         {
             this.unitOfWork = unitOfWork;
-            var storageQueueAddress = Address.Local.SubScope("distributor.storage");
+            var storageQueueAddress = configure.LocalAddress.SubScope("distributor.storage");
             var path = MsmqUtilities.GetFullPath(storageQueueAddress);
             var messageReadPropertyFilter = new MessagePropertyFilter
             {

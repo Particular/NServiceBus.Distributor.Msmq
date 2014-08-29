@@ -8,7 +8,7 @@
 
     internal class DistributorProfileHandler : IHandleProfile<MSMQDistributor>, IWantTheListOfActiveProfiles
     {
-        public void ProfileActivated(Configure config)
+        public void ProfileActivated(BusConfiguration config)
         {
             if (ActiveProfiles.Contains(typeof(MSMQWorker)))
             {
@@ -16,6 +16,10 @@
             }
 
             config.RunMSMQDistributor(false);
+        }
+
+        public void ProfileActivated(Configure config)
+        {
         }
 
         public IEnumerable<Type> ActiveProfiles { get; set; }

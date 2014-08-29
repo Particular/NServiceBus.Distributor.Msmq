@@ -8,7 +8,7 @@
 
     internal class MasterProfileHandler : IHandleProfile<MSMQMaster>, IWantTheListOfActiveProfiles
     {
-        public void ProfileActivated(Configure config)
+        public void ProfileActivated(BusConfiguration config)
         {
             if (ActiveProfiles.Contains(typeof(MSMQWorker)))
             {
@@ -16,6 +16,10 @@
             }
 
             config.AsMSMQMasterNode();
+        }
+
+        public void ProfileActivated(Configure config)
+        {
         }
 
         public IEnumerable<Type> ActiveProfiles { get; set; }

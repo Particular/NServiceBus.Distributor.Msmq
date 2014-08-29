@@ -4,6 +4,7 @@ namespace NServiceBus
     using System.Configuration;
     using System.Linq;
     using System.Net;
+    using Configuration.AdvanceExtensibility;
     using Logging;
     using Settings;
 
@@ -16,9 +17,9 @@ namespace NServiceBus
         /// <summary>
         /// Configure this endpoint as both a Distributor and a Worker.
         /// </summary>
-        public static Configure AsMSMQMasterNode(this Configure config)
+        public static void AsMSMQMasterNode(this BusConfiguration config)
         {
-            return config.RunMSMQDistributor();
+            config.RunMSMQDistributor();
         }
 
         /// <summary>
@@ -26,30 +27,25 @@ namespace NServiceBus
         /// </summary>
         /// <param name="config"></param>
         /// <param name="withWorker"><value>true</value> if this endpoint should enlist as a worker, otherwise <value>false</value>. Default is <value>true</value>.</param>
-        public static Configure RunMSMQDistributor(this Configure config, bool withWorker = true)
+        public static void RunMSMQDistributor(this BusConfiguration config, bool withWorker = true)
         {
             config.EnableFeature<Distributor.MSMQ.Distributor>();
 
             if (withWorker)
             {
-                config.Settings.Set("Distributor.WithWorker", true);
+                config.GetSettings().Set("Distributor.WithWorker", true);
                 config.EnableFeature<Distributor.MSMQ.WorkerNode>();
             }
-
-
-            return config;
         }
 
         /// <summary>
         ///     Enlist Worker with Master node defined in the config.
         /// </summary>
-        public static Configure EnlistWithMSMQDistributor(this Configure config)
+        public static void EnlistWithMSMQDistributor(this BusConfiguration config)
         {
-            ValidateMasterNodeConfigurationForWorker(config.Settings);
+            ValidateMasterNodeConfigurationForWorker(config.GetSettings());
 
             config.EnableFeature<Distributor.MSMQ.WorkerNode>();
-
-            return config;
         }
 
         static void ValidateMasterNodeConfigurationForWorker(SettingsHolder settings)
