@@ -20,14 +20,12 @@ namespace NServiceBus.Distributor.MSMQ
         /// </summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
-            var endpointName = context.Settings.Get<string>("EndpointName");
-
+            var endpointName = context.Settings.EndpointName();
             var applicativeInputQueue = Address.Parse(endpointName).SubScope("worker");
          
-           
             context.Container.ConfigureComponent<UnicastBus>(DependencyLifecycle.SingleInstance)
                 .ConfigureProperty(r => r.InputAddress, applicativeInputQueue)
-                .ConfigureProperty(r => r.DoNotStartTransport, !context.Settings.Get<bool>("Distributor.WithWorker"));
+                .ConfigureProperty(r => r.DoNotStartTransport, !context.Settings.GetOrDefault<bool>("Distributor.WithWorker"));
 
             if (!context.Container.HasComponent<WorkerQueueCreator>())
             {
@@ -37,8 +35,8 @@ namespace NServiceBus.Distributor.MSMQ
             }
             else
             {
-                context.Container.ConfigureProperty<WorkerQueueCreator>(p => p.DistributorEnabled, true)
-                    .ConfigureProperty<WorkerQueueCreator>(p => p.Address, applicativeInputQueue);
+                context.Container.ConfigureProperty<WorkerQueueCreator>(p => p.DistributorEnabled, true);
+                context.Container.ConfigureProperty<WorkerQueueCreator>(p => p.Address, applicativeInputQueue);
             }
 
             if (!context.Container.HasComponent<IWorkerAvailabilityManager>())

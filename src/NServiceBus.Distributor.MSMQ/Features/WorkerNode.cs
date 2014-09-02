@@ -23,13 +23,22 @@ namespace NServiceBus.Distributor.MSMQ
             {
                 var masterNodeAddress = MasterNodeConfiguration.GetMasterNodeAddress(s);
                 s.Set("MasterNode.Address", masterNodeAddress);
+                s.Set("PublicReturnAddress", masterNodeAddress);
 
                 if(!string.IsNullOrEmpty(MasterNodeConfiguration.GetMasterNode(s)))
                 {
                     s.SetDefault("SecondLevelRetries.AddressOfRetryProcessor", masterNodeAddress.SubScope("Retries"));
                 }
             });
+            Defaults(s =>
+            {
+                var workerName = ConfigurationManager.AppSettings.Get("NServiceBus/Distributor/WorkerNameToUseWhileTesting");
 
+                if (!String.IsNullOrEmpty(workerName))
+                {
+                    s.Set("NServiceBus.LocalAddress", workerName);
+                }
+            });
             RegisterStartupTask<ReadyMessageSender>();
         }
 
@@ -38,8 +47,15 @@ namespace NServiceBus.Distributor.MSMQ
         /// </summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
+            if (!context.Settings.GetOrDefault<bool>("Distributor.Enabled"))
+            {
+                var workerName = ConfigurationManager.AppSettings.Get("NServiceBus/Distributor/WorkerNameToUseWhileTesting");
 
-            ValidateMasterNodeAddress(context.Settings); 
+                if (String.IsNullOrEmpty(workerName))
+                {
+                    ValidateMasterNodeAddress(context.Settings);
+                }
+            } 
             
             var masterNodeAddress = MasterNodeConfiguration.GetMasterNodeAddress(context.Settings);
 
@@ -65,10 +81,6 @@ namespace NServiceBus.Distributor.MSMQ
 
             context.Container.ConfigureComponent<ReadyMessageSender>(DependencyLifecycle.SingleInstance)
                 .ConfigureProperty(p => p.DistributorControlAddress, distributorControlAddress);
-
-            context.Pipeline.Register<ReturnAddressRewriterBehavior.Registration>();
-            context.Container.ConfigureComponent<ReturnAddressRewriterBehavior>(DependencyLifecycle.InstancePerCall)
-                .ConfigureProperty(r => r.DistributorDataAddress, masterNodeAddress);
         }
 
         static void ValidateMasterNodeAddress(ReadOnlySettings settings)
@@ -84,7 +96,7 @@ namespace NServiceBus.Distributor.MSMQ
             switch (IsLocalIpAddress(masterNodeName))
             {
                 case true:
-                    throw new Exception(string.Format("'MasterNodeConfig.Node' points to a local host name: [{0}]", masterNodeName));
+                    throw new ConfigurationErrorsException(string.Format("'MasterNodeConfig.Node' points to a local host name: [{0}]", masterNodeName));
                 case false:
                     logger.InfoFormat("'MasterNodeConfig.Node' points to a non-local valid host name: [{0}].", masterNodeName);
                     break;

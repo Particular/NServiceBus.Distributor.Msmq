@@ -2,6 +2,7 @@ namespace NServiceBus.Distributor.MSMQ
 {
     using System;
     using Logging;
+    using NServiceBus.ObjectBuilder;
     using ReadyMessages;
     using Satellites;
     using Settings;
@@ -18,12 +19,18 @@ namespace NServiceBus.Distributor.MSMQ
         readonly ISendMessages messageSender;
         readonly IWorkerAvailabilityManager workerManager;
 
-        public DistributorSatellite(ISendMessages messageSender, IWorkerAvailabilityManager workerManager, ReadOnlySettings settings)
+        public DistributorSatellite(IBuilder builder, ReadOnlySettings settings)
         {
-            this.messageSender = messageSender;
-            this.workerManager = workerManager;
-            address = MasterNodeConfiguration.GetMasterNodeAddress(settings);
             disable = !settings.GetOrDefault<bool>("Distributor.Enabled");
+
+            if (disable)
+            {
+                return;
+            }
+
+            messageSender = builder.Build<ISendMessages>();
+            workerManager = builder.Build<IWorkerAvailabilityManager>();
+            address = MasterNodeConfiguration.GetMasterNodeAddress(settings);
         }
 
         /// <summary>

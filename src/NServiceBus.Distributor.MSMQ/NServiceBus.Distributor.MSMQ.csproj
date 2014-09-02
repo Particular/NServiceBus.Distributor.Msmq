@@ -74,7 +74,6 @@
     <Compile Include="App_Packages\NServiceBus.Hosting.Profiles\ProfileManager.cs" />
     <Compile Include="ConfigureMSMQDistributor.cs" />
     <Compile Include="Features\Distributor.cs" />
-    <Compile Include="Features\ReturnAddressRewriterBehavior.cs" />
     <Compile Include="Features\WorkerNode.cs" />
     <Compile Include="DistributorReadyMessageProcessor.cs" />
     <Compile Include="DistributorSatellite.cs" />

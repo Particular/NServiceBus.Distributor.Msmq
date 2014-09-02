@@ -7,14 +7,10 @@ namespace NServiceBus.Distributor.MSMQ.QueueCreators
     /// </summary>
     class WorkerQueueCreator : IWantQueueCreated
     {
-        // ReSharper disable UnassignedField.Compiler
-#pragma warning disable 649
-        public bool WorkerEnabled;
+        public bool WorkerEnabled { get; set; }
 
-        public bool DistributorEnabled;
-#pragma warning restore 649
+        public bool DistributorEnabled { get; set; }
 
-        // ReSharper restore UnassignedField.Compiler
         public bool ShouldCreateQueue()
         {
             return DistributorEnabled && WorkerEnabled;

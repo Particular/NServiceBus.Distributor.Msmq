@@ -1,12 +1,6 @@
 namespace NServiceBus
 {
-    using System;
-    using System.Configuration;
-    using System.Linq;
-    using System.Net;
     using Configuration.AdvanceExtensibility;
-    using Logging;
-    using Settings;
 
 
     /// <summary>
