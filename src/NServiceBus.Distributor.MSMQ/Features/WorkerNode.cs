@@ -129,7 +129,6 @@ namespace NServiceBus.Distributor.MSMQ
             return false;
         }
 
-        static ILog logger = LogManager.GetLogger(typeof(MSMQWorker));
-
+        static ILog logger = LogManager.GetLogger(typeof(WorkerNode));
     }
 }
