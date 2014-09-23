@@ -76,7 +76,6 @@
     <Compile Include="MsmqUtilities.cs" />
     <Compile Include="MsmqWorkerAvailabilityManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QueueCreators\DistributorStorageQueueCreator.cs" />
     <Compile Include="QueueCreators\WorkerQueueCreator.cs" />
     <Compile Include="ReadyMessages\Headers.cs" />
     <Compile Include="ReadyMessages\ReadyMessageSender.cs" />
