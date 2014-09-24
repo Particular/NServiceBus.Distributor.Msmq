@@ -2,7 +2,6 @@ namespace NServiceBus.Distributor.MSMQ
 {
     using System;
     using Logging;
-    using ReadyMessages;
     using Satellites;
     using Settings;
     using Transports;

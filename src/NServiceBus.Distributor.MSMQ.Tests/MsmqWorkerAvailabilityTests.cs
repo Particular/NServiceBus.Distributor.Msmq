@@ -99,20 +99,20 @@
             workerAvailabilityManager.RegisterNewWorker(worker2, 1);
             workerAvailabilityManager.RegisterNewWorker(worker3, 2);
             // For the first 3 messages, should use worker1
-            for (int i = 0; i < worker1Capacity; i++)
+            for (var i = 0; i < worker1Capacity; i++)
             {
                 var worker = workerAvailabilityManager.NextAvailableWorker();
                 Assert.AreEqual("worker1", worker.Address.Queue);
             }
 
             // Next should use worker2, as capacity for worker2 is 1
-            for (int i = 0; i < worker2Capacity; i++)
+            for (var i = 0; i < worker2Capacity; i++)
             {
                 var worker = workerAvailabilityManager.NextAvailableWorker();
                 Assert.AreEqual("worker2", worker.Address.Queue);
             }
 
-            for (int i = 0; i < worker3Capacity; i++)
+            for (var i = 0; i < worker3Capacity; i++)
             {
                 var worker = workerAvailabilityManager.NextAvailableWorker();
                 Assert.AreEqual("worker3", worker.Address.Queue);
