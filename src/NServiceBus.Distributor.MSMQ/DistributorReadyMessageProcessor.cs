@@ -1,6 +1,7 @@
 namespace NServiceBus.Distributor.MSMQ
 {
     using System;
+    using NServiceBus.ObjectBuilder;
     using ReadyMessages;
     using Satellites;
     using Settings;
@@ -11,17 +12,20 @@ namespace NServiceBus.Distributor.MSMQ
     /// </summary>
     internal class DistributorReadyMessageProcessor : IAdvancedSatellite
     {
-        static DistributorReadyMessageProcessor()
-        {
-            Address = Configure.Instance.GetMasterNodeAddress().SubScope("distributor.control");
-            Disable = !ConfigureMSMQDistributor.DistributorConfiguredToRunOnThisEndpoint() || SettingsHolder.Get<int>("Distributor.Version") != 2;
-        }
+        readonly IWorkerAvailabilityManager workerAvailabilityManager;
 
-        /// <summary>
-        ///     Sets the <see cref="IWorkerAvailabilityManager" /> implementation that will be
-        ///     used to determine whether or not a worker is available.
-        /// </summary>
-        public IWorkerAvailabilityManager WorkerAvailabilityManager { get; set; }
+        public DistributorReadyMessageProcessor(IBuilder builder, ReadOnlySettings settings)
+        {
+            disable = !settings.GetOrDefault<bool>("Distributor.Enabled");
+
+            if (disable)
+            {
+                return;
+            }
+
+            workerAvailabilityManager = builder.Build<IWorkerAvailabilityManager>();
+            address = MasterNodeConfiguration.GetMasterNodeAddress(settings).SubScope("distributor.control");
+        }
 
         /// <summary>
         ///     This method is called when a message is available to be processed.
@@ -31,7 +35,7 @@ namespace NServiceBus.Distributor.MSMQ
         /// </param>
         public bool Handle(TransportMessage message)
         {
-            if (!message.IsControlMessage())
+            if (!IsControlMessage(message))
             {
                 return true;
             }
@@ -52,7 +56,7 @@ namespace NServiceBus.Distributor.MSMQ
         /// </summary>
         public Address InputAddress
         {
-            get { return Address; }
+            get { return address; }
         }
 
         /// <summary>
@@ -60,7 +64,7 @@ namespace NServiceBus.Distributor.MSMQ
         /// </summary>
         public bool Disabled
         {
-            get { return Disable; }
+            get { return disable; }
         }
 
         /// <summary>
@@ -82,16 +86,22 @@ namespace NServiceBus.Distributor.MSMQ
             return receiver =>
             {
                 //we don't need any DTC for the distributor
-                receiver.TransactionSettings.DontUseDistributedTransactions = true;
+                receiver.TransactionSettings.SuppressDistributedTransactions = true;
                 receiver.TransactionSettings.DoNotWrapHandlersExecutionInATransactionScope = true;
             };
+        }
+
+        bool IsControlMessage(TransportMessage transportMessage)
+        {
+            return transportMessage.Headers != null &&
+                   transportMessage.Headers.ContainsKey(NServiceBus.Headers.ControlMessageHeader);
         }
 
         void HandleDisconnectMessage(TransportMessage controlMessage)
         {
             var workerAddress = Address.Parse(controlMessage.Headers[Headers.UnregisterWorker]);
 
-            WorkerAvailabilityManager.UnregisterWorker(workerAddress);
+            workerAvailabilityManager.UnregisterWorker(workerAddress);
         }
 
         void HandleControlMessage(TransportMessage controlMessage)
@@ -108,15 +118,15 @@ namespace NServiceBus.Distributor.MSMQ
             {
                 var capacity = int.Parse(controlMessage.Headers[Headers.WorkerCapacityAvailable]);
 
-                WorkerAvailabilityManager.RegisterNewWorker(new Worker(replyToAddress, messageSessionId), capacity);
+                workerAvailabilityManager.RegisterNewWorker(new Worker(replyToAddress, messageSessionId), capacity);
 
                 return;
             }
 
-            WorkerAvailabilityManager.WorkerAvailable(new Worker(replyToAddress, messageSessionId));
+            workerAvailabilityManager.WorkerAvailable(new Worker(replyToAddress, messageSessionId));
         }
 
-        static readonly Address Address;
-        static readonly bool Disable;
+        readonly Address address;
+        readonly bool disable;
     }
 }

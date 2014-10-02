@@ -2,41 +2,43 @@ namespace NServiceBus.Distributor.MSMQ
 {
     using System;
     using Logging;
+    using NServiceBus.ObjectBuilder;
     using ReadyMessages;
     using Satellites;
     using Settings;
     using Transports;
+    using Unicast;
     using Unicast.Transport;
 
     /// <summary>
     ///     Provides functionality for distributing messages from a bus
     ///     to multiple workers when using a unicast transport.
     /// </summary>
-    internal class DistributorSatellite : IAdvancedSatellite
+    class DistributorSatellite : IAdvancedSatellite
     {
-        static DistributorSatellite()
+        readonly ISendMessages messageSender;
+        readonly IWorkerAvailabilityManager workerManager;
+
+        public DistributorSatellite(IBuilder builder, ReadOnlySettings settings)
         {
-            Address = Configure.Instance.GetMasterNodeAddress();
-            Disable = !ConfigureMSMQDistributor.DistributorConfiguredToRunOnThisEndpoint() || SettingsHolder.Get<int>("Distributor.Version") != 2;
+            disable = !settings.GetOrDefault<bool>("Distributor.Enabled");
+
+            if (disable)
+            {
+                return;
+            }
+
+            messageSender = builder.Build<ISendMessages>();
+            workerManager = builder.Build<IWorkerAvailabilityManager>();
+            address = MasterNodeConfiguration.GetMasterNodeAddress(settings);
         }
 
         /// <summary>
-        ///     Object used to send messages.
-        /// </summary>
-        public ISendMessages MessageSender { get; set; }
-
-        /// <summary>
-        ///     Sets the <see cref="IWorkerAvailabilityManager" /> implementation that will be
-        ///     used to determine whether or not a worker is available.
-        /// </summary>
-        public IWorkerAvailabilityManager WorkerManager { get; set; }
-
-        /// <summary>
-        ///     The <see cref="Address" /> for this <see cref="ISatellite" /> to use when receiving messages.
+        ///     The <see cref="address" /> for this <see cref="ISatellite" /> to use when receiving messages.
         /// </summary>
         public Address InputAddress
         {
-            get { return Address; }
+            get { return address; }
         }
 
         /// <summary>
@@ -44,7 +46,7 @@ namespace NServiceBus.Distributor.MSMQ
         /// </summary>
         public bool Disabled
         {
-            get { return Disable; }
+            get { return disable; }
         }
 
         /// <summary>
@@ -66,7 +68,7 @@ namespace NServiceBus.Distributor.MSMQ
             return receiver =>
             {
                 //we don't need any DTC for the distributor
-                receiver.TransactionSettings.DontUseDistributedTransactions = true;
+                receiver.TransactionSettings.SuppressDistributedTransactions = true;
                 receiver.TransactionSettings.DoNotWrapHandlersExecutionInATransactionScope = true;
             };
         }
@@ -77,7 +79,7 @@ namespace NServiceBus.Distributor.MSMQ
         /// <param name="message">The <see cref="TransportMessage" /> received.</param>
         public bool Handle(TransportMessage message)
         {
-            var worker = WorkerManager.NextAvailableWorker();
+            var worker = workerManager.NextAvailableWorker();
 
             if (worker == null)
             {
@@ -88,14 +90,14 @@ namespace NServiceBus.Distributor.MSMQ
 
             message.Headers[Headers.WorkerSessionId] = worker.SessionId;
 
-            MessageSender.Send(message, worker.Address);
+            messageSender.Send(message, new SendOptions(worker.Address));
 
             return true;
         }
 
         static readonly ILog Logger = LogManager.GetLogger(typeof(DistributorSatellite));
 
-        static readonly Address Address;
-        static readonly bool Disable;
+        readonly Address address;
+        readonly bool disable;
     }
 }

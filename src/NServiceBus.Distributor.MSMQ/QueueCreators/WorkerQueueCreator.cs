@@ -1,27 +1,24 @@
 namespace NServiceBus.Distributor.MSMQ.QueueCreators
 {
-    using Settings;
     using Unicast.Queuing;
 
     /// <summary>
-    ///     Signal to create the queue for a worker
+    ///     Signal to create the queue for the worker
     /// </summary>
-    internal class WorkerQueueCreator : IWantQueueCreated
+    class WorkerQueueCreator : IWantQueueCreated
     {
-        /// <summary>
-        ///     Address of worker queue
-        /// </summary>
-        public Address Address
+        public bool WorkerEnabled { get; set; }
+
+        public bool DistributorEnabled { get; set; }
+
+        public bool ShouldCreateQueue()
         {
-            get { return Address.Local.SubScope("Worker"); }
+            return DistributorEnabled && WorkerEnabled;
         }
 
         /// <summary>
-        ///     Disabling the creation of the worker queue
+        ///     Address of worker queue
         /// </summary>
-        public bool IsDisabled
-        {
-            get { return !(ConfigureMSMQDistributor.DistributorConfiguredToRunOnThisEndpoint() && ConfigureMSMQDistributor.WorkerRunsOnThisEndpoint() && SettingsHolder.Get<int>("Distributor.Version") == 2); }
-        }
+        public Address Address { get; set; }
     }
 }

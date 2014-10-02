@@ -9,12 +9,13 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>NServiceBus.Distributor.MSMQ</RootNamespace>
     <AssemblyName>NServiceBus.Distributor.MSMQ</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\NServiceBus.snk</AssemblyOriginatorKeyFile>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
-    <NuGetPackageImportStamp>6eabeddb</NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>123a62f5</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -27,7 +28,9 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DocumentationFile>..\..\binaries\NServiceBus.Distributor.MSMQ.XML</DocumentationFile>
     <UseVSHostingProcess>false</UseVSHostingProcess>
-    <NoWarn>612,618</NoWarn>
+    <NoWarn>
+    </NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -39,21 +42,20 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DocumentationFile>..\..\binaries\NServiceBus.Distributor.MSMQ.XML</DocumentationFile>
     <NoWarn>612,618</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Janitor">
+    <Reference Include="Janitor, Version=1.1.0.0, Culture=neutral, PublicKeyToken=d34c7d3bba3746e6, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Janitor.Fody.1.1.0.0\Lib\portable-net4+sl5+wp8+win8+wpa81+MonoAndroid16+MonoTouch40\Janitor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="NServiceBus">
-      <HintPath>..\packages\NServiceBus.Interfaces.4.4.2\lib\net40\NServiceBus.dll</HintPath>
+    <Reference Include="NServiceBus.Core">
+      <HintPath>..\packages\NServiceBus.5.0.0\lib\net45\NServiceBus.Core.dll</HintPath>
     </Reference>
-    <Reference Include="NServiceBus.Core, Version=4.4.0.0, Culture=neutral, PublicKeyToken=9fc386479f8a226c, processorArchitecture=MSIL">
+    <Reference Include="Obsolete, Version=3.1.0.0, Culture=neutral, PublicKeyToken=1ca091877d12ca03, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\NServiceBus.4.4.2\lib\net40\NServiceBus.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Obsolete">
       <HintPath>..\packages\Obsolete.Fody.3.1.0.0\Lib\NET35\Obsolete.dll</HintPath>
       <Private>False</Private>
     </Reference>
@@ -64,29 +66,26 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigureMSMQDistributor.cs" />
-    <Compile Include="Config\DistributorInitializer.cs" />
-    <Compile Include="Config\WorkerInitializer.cs" />
+    <Compile Include="Features\Distributor.cs" />
+    <Compile Include="Features\WorkerNode.cs" />
     <Compile Include="DistributorReadyMessageProcessor.cs" />
     <Compile Include="DistributorSatellite.cs" />
     <Compile Include="IWorkerAvailabilityManager.cs" />
-    <Compile Include="Config\AdjustSettingsForNonMasterNodes.cs" />
+    <Compile Include="MasterNodeConfiguration.cs" />
+    <Compile Include="MsmqUtilities.cs" />
     <Compile Include="MsmqWorkerAvailabilityManager.cs" />
-    <Compile Include="Profiles\DistributorProfileHandler.cs" />
-    <Compile Include="Profiles\MasterProfileHandler.cs" />
-    <Compile Include="Profiles\MSMQDistributor.cs" />
-    <Compile Include="Profiles\MSMQMaster.cs" />
-    <Compile Include="Profiles\MSMQWorker.cs" />
-    <Compile Include="Profiles\WorkerProfileHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QueueCreators\DistributorStorageQueueCreator.cs" />
     <Compile Include="QueueCreators\WorkerQueueCreator.cs" />
     <Compile Include="ReadyMessages\Headers.cs" />
     <Compile Include="ReadyMessages\ReadyMessageSender.cs" />
-    <Compile Include="ReadyMessages\ReturnAddressRewriter.cs" />
+    <Compile Include="RunVirtualProfiles.cs" />
     <Compile Include="Worker.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="FodyWeavers.xml" />
@@ -98,9 +97,9 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Fody.1.25.0\build\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.1.25.0\build\Fody.targets'))" />
-    <Error Condition="!Exists('..\packages\GitVersionTask.1.3.0\Build\GitVersionTask.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\GitVersionTask.1.3.0\Build\GitVersionTask.targets'))" />
-    <Error Condition="!Exists('..\packages\NuGetPackager.0.1.6\build\NuGetPackager.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\NuGetPackager.0.1.6\build\NuGetPackager.targets'))" />
+    <Error Condition="!Exists('..\packages\GitVersionTask.1.2.0\Build\GitVersionTask.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\GitVersionTask.1.2.0\Build\GitVersionTask.targets'))" />
+    <Error Condition="!Exists('..\packages\NuGetPackager.0.1.3\build\NuGetPackager.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\NuGetPackager.0.1.3\build\NuGetPackager.targets'))" />
   </Target>
-  <Import Project="..\packages\GitVersionTask.1.3.0\Build\GitVersionTask.targets" Condition="Exists('..\packages\GitVersionTask.1.3.0\Build\GitVersionTask.targets')" />
-  <Import Project="..\packages\NuGetPackager.0.1.6\build\NuGetPackager.targets" Condition="Exists('..\packages\NuGetPackager.0.1.6\build\NuGetPackager.targets')" />
+  <Import Project="..\packages\GitVersionTask.1.2.0\Build\GitVersionTask.targets" Condition="Exists('..\packages\GitVersionTask.1.2.0\Build\GitVersionTask.targets')" />
+  <Import Project="..\packages\NuGetPackager.0.1.3\build\NuGetPackager.targets" Condition="Exists('..\packages\NuGetPackager.0.1.3\build\NuGetPackager.targets')" />
 </Project>
