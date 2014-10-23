@@ -25,7 +25,7 @@ namespace NServiceBus.Distributor.MSMQ.ReadyMessages
             var capacityAvailable = transport.MaximumConcurrencyLevel;
             SendReadyMessage(workerSessionId, capacityAvailable, true);
 
-            transport.FinishedMessageProcessing += TransportOnFinishedMessageProcessing;
+            transport.StartedMessageProcessing += TransportOnStartedMessageProcessing;
         }
 
         public void Stop()
@@ -33,11 +33,11 @@ namespace NServiceBus.Distributor.MSMQ.ReadyMessages
             //transport will be null if !WorkerRunsOnThisEndpoint
             if (transport != null)
             {
-                transport.FinishedMessageProcessing -= TransportOnFinishedMessageProcessing;
+                transport.StartedMessageProcessing -= TransportOnStartedMessageProcessing;
             }
         }
 
-        void TransportOnFinishedMessageProcessing(object sender, FinishedMessageProcessingEventArgs e)
+        void TransportOnStartedMessageProcessing(object sender, StartedMessageProcessingEventArgs e)
         {
             //if there was a failure this "send" will be rolled back
             string messageSessionId;
