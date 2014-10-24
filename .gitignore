@@ -32,3 +32,5 @@ csx
 *.ncrunchproject
 *.ncrunchsolution
 _NCrunch_NServiceBus/*
+src/Chocolatey/Build/*
+deploy/
