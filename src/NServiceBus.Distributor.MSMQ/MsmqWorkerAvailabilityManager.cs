@@ -15,28 +15,42 @@ namespace NServiceBus.Distributor.MSMQ
     /// </summary>
     internal class MsmqWorkerAvailabilityManager : IWorkerAvailabilityManager, IDisposable
     {
+        readonly Configure configure;
         MsmqUnitOfWork unitOfWork;
 
         public MsmqWorkerAvailabilityManager(Configure configure, MsmqUnitOfWork unitOfWork)
         {
+            this.configure = configure;
             this.unitOfWork = unitOfWork;
-            var storageQueueAddress = configure.LocalAddress.SubScope("distributor.storage");
-            var path = MsmqUtilities.GetFullPath(storageQueueAddress);
-            var messageReadPropertyFilter = new MessagePropertyFilter
-            {
-                Id = true,
-                Label = true,
-                ResponseQueue = true,
-            };
+        }
 
-            storageQueue = new MessageQueue(path, false, true, QueueAccessMode.SendAndReceive)
+        public void Init()
+        {
+            lock (lockObj)
             {
-                MessageReadPropertyFilter = messageReadPropertyFilter
-            };
+                if (storageQueue != null)
+                {
+                    return;
+                }
 
-            if ((!storageQueue.Transactional) && (configure.Settings.Get<bool>("Transactions.Enabled")))
-            {
-                throw new Exception(string.Format("Queue [{0}] must be transactional.", path));
+                var storageQueueAddress = configure.LocalAddress.SubScope("distributor.storage");
+                var path = MsmqUtilities.GetFullPath(storageQueueAddress);
+                var messageReadPropertyFilter = new MessagePropertyFilter
+                {
+                    Id = true,
+                    Label = true,
+                    ResponseQueue = true,
+                };
+
+                storageQueue = new MessageQueue(path, false, true, QueueAccessMode.SendAndReceive)
+                {
+                    MessageReadPropertyFilter = messageReadPropertyFilter
+                };
+
+                if ((!storageQueue.Transactional) && (configure.Settings.Get<bool>("Transactions.Enabled")))
+                {
+                    throw new Exception(string.Format("Queue [{0}] must be transactional.", path));
+                }
             }
         }
 
@@ -232,5 +246,6 @@ namespace NServiceBus.Distributor.MSMQ
         ReaderWriterLockSlim storageLock = new ReaderWriterLockSlim();
         Dictionary<Address, string> registeredWorkerAddresses = new Dictionary<Address, string>();
         MessageQueue storageQueue;
+        object lockObj = new object();
     }
 }
