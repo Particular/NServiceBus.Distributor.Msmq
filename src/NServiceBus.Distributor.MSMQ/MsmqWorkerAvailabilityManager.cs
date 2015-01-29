@@ -34,7 +34,19 @@ namespace NServiceBus.Distributor.MSMQ
                 MessageReadPropertyFilter = messageReadPropertyFilter
             };
 
-            if ((!storageQueue.Transactional) && (configure.Settings.Get<bool>("Transactions.Enabled")))
+            var transactional = false;
+            try
+            {
+                transactional = storageQueue.Transactional;
+            }
+            catch (MessageQueueException ex)
+            {
+                if (ex.MessageQueueErrorCode == MessageQueueErrorCode.QueueNotFound)
+                {
+                    throw new Exception(string.Format("Queue [{0}] does not exist.", path));                    
+                }
+            }
+            if ((!transactional) && (configure.Settings.Get<bool>("Transactions.Enabled")))
             {
                 throw new Exception(string.Format("Queue [{0}] must be transactional.", path));
             }
