@@ -112,15 +112,6 @@ namespace NServiceBus.Distributor.MSMQ
                     registeredWorkerAddresses[address] = sessionId;
 
                     Logger.InfoFormat("Worker at '{0}' has been re-registered with distributor.", address);
-
-                    return new Worker(address, sessionId);
-                }
-
-                if (registeredWorkerSessionId != sessionId)
-                {
-                    Logger.InfoFormat("Session ids for Worker at '{0}' do not match, so poping next available worker.", address);
-
-                    return NextAvailableWorker();
                 }
 
                 return new Worker(address, sessionId);
@@ -148,16 +139,6 @@ namespace NServiceBus.Distributor.MSMQ
             {
                 // Drop ready message as this worker has been disconnected 
                 Logger.InfoFormat("Dropping ready message from Worker at '{0}', because this worker has been disconnected.", worker.Address);
-
-                return;
-            }
-
-            if (sessionId != worker.SessionId)
-            {
-                // Drop ready message as this message is an extra message that could have been sent because of
-                // https://github.com/Particular/NServiceBus/issues/978
-
-                Logger.InfoFormat("Dropping ready message from Worker at {0}, because this ready message is from an old worker sessionid.", worker.Address);
 
                 return;
             }
