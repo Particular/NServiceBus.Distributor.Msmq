@@ -15,40 +15,56 @@ namespace NServiceBus.Distributor.MSMQ
     /// </summary>
     internal class MsmqWorkerAvailabilityManager : IWorkerAvailabilityManager, IDisposable
     {
+        readonly Configure configure;
         MsmqUnitOfWork unitOfWork;
 
         public MsmqWorkerAvailabilityManager(Configure configure, MsmqUnitOfWork unitOfWork)
         {
+            this.configure = configure;
             this.unitOfWork = unitOfWork;
-            var storageQueueAddress = configure.LocalAddress.SubScope("distributor.storage");
-            var path = MsmqUtilities.GetFullPath(storageQueueAddress);
-            var messageReadPropertyFilter = new MessagePropertyFilter
-            {
-                Id = true,
-                Label = true,
-                ResponseQueue = true,
-            };
+        }
 
-            storageQueue = new MessageQueue(path, false, true, QueueAccessMode.SendAndReceive)
+        public void Init()
+        {
+            lock (lockObj)
             {
-                MessageReadPropertyFilter = messageReadPropertyFilter
-            };
-
-            var transactional = false;
-            try
-            {
-                transactional = storageQueue.Transactional;
-            }
-            catch (MessageQueueException ex)
-            {
-                if (ex.MessageQueueErrorCode == MessageQueueErrorCode.QueueNotFound)
+                if (storageQueue != null)
                 {
-                    throw new Exception(string.Format("Queue [{0}] does not exist.", path));                    
+                    return;
                 }
-            }
-            if ((!transactional) && (configure.Settings.Get<bool>("Transactions.Enabled")))
-            {
-                throw new Exception(string.Format("Queue [{0}] must be transactional.", path));
+
+                var storageQueueAddress = configure.LocalAddress.SubScope("distributor.storage");
+                var path = MsmqUtilities.GetFullPath(storageQueueAddress);
+                var messageReadPropertyFilter = new MessagePropertyFilter
+                {
+                    Id = true,
+                    Label = true,
+                    ResponseQueue = true,
+                };
+
+                storageQueue = new MessageQueue(path, false, true, QueueAccessMode.SendAndReceive)
+                {
+                    MessageReadPropertyFilter = messageReadPropertyFilter
+                };
+
+                var transactional = false;
+
+                try
+                {
+                    transactional = storageQueue.Transactional;
+                }
+                catch (MessageQueueException ex)
+                {
+                    if (ex.MessageQueueErrorCode == MessageQueueErrorCode.QueueNotFound)
+                    {
+                        throw new Exception(string.Format("Queue [{0}] does not exist.", path));
+                    }
+                }
+
+                if ((!transactional) && (configure.Settings.Get<bool>("Transactions.Enabled")))
+                {
+                    throw new Exception(string.Format("Queue [{0}] must be transactional.", path));
+                }
             }
         }
 
@@ -110,15 +126,6 @@ namespace NServiceBus.Distributor.MSMQ
                     registeredWorkerAddresses[address] = sessionId;
 
                     Logger.InfoFormat("Worker at '{0}' has been re-registered with distributor.", address);
-
-                    return new Worker(address, sessionId);
-                }
-
-                if (registeredWorkerSessionId != sessionId)
-                {
-                    Logger.InfoFormat("Session ids for Worker at '{0}' do not match, so poping next available worker.", address);
-
-                    return NextAvailableWorker();
                 }
 
                 return new Worker(address, sessionId);
@@ -146,16 +153,6 @@ namespace NServiceBus.Distributor.MSMQ
             {
                 // Drop ready message as this worker has been disconnected 
                 Logger.InfoFormat("Dropping ready message from Worker at '{0}', because this worker has been disconnected.", worker.Address);
-
-                return;
-            }
-
-            if (sessionId != worker.SessionId)
-            {
-                // Drop ready message as this message is an extra message that could have been sent because of
-                // https://github.com/Particular/NServiceBus/issues/978
-
-                Logger.InfoFormat("Dropping ready message from Worker at {0}, because this ready message is from an old worker sessionid.", worker.Address);
 
                 return;
             }
@@ -244,5 +241,6 @@ namespace NServiceBus.Distributor.MSMQ
         ReaderWriterLockSlim storageLock = new ReaderWriterLockSlim();
         Dictionary<Address, string> registeredWorkerAddresses = new Dictionary<Address, string>();
         MessageQueue storageQueue;
+        object lockObj = new object();
     }
 }

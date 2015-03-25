@@ -72,6 +72,11 @@ namespace NServiceBus.Distributor.MSMQ
         /// </summary>
         public void Start()
         {
+            var msmqWorkerAvailabilityManager = workerAvailabilityManager as MsmqWorkerAvailabilityManager;
+            if (msmqWorkerAvailabilityManager != null)
+            {
+                msmqWorkerAvailabilityManager.Init();
+            }
         }
 
         /// <summary>
