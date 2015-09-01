@@ -2,6 +2,7 @@ namespace NServiceBus.Distributor.MSMQ.ReadyMessages
 {
     using System;
     using Features;
+    using NServiceBus.Logging;
     using Transports;
     using Unicast;
     using Unicast.Transport;
@@ -19,7 +20,7 @@ namespace NServiceBus.Distributor.MSMQ.ReadyMessages
             transport = Bus.Transport;
             var capacityAvailable = transport.MaximumConcurrencyLevel;
             SendReadyMessage(workerSessionId, capacityAvailable, true);
-
+            Logger.DebugFormat("Ready startup message with WorkerSessionId {0} sent. ", workerSessionId);
             transport.StartedMessageProcessing += TransportOnStartedMessageProcessing;
         }
 
@@ -37,12 +38,17 @@ namespace NServiceBus.Distributor.MSMQ.ReadyMessages
             //if there was a failure this "send" will be rolled back
             string messageSessionId;
             e.Message.Headers.TryGetValue(Headers.WorkerSessionId, out messageSessionId);
-
+            Logger.DebugFormat("Got message with id {0} and messageSessionId {1}. WorkerSessionId is {2}", e.Message.Id, messageSessionId ?? string.Empty, workerSessionId);
             //If the message we are processing contains an old sessionid then we do not send an extra control message 
             //otherwise that would cause https://github.com/Particular/NServiceBus/issues/978
             if (messageSessionId == workerSessionId)
             {
                 SendReadyMessage(messageSessionId);
+                Logger.DebugFormat("Ready message for message with id {0} sent back with messageSessionId {1}. WorkerSessionId was {2}", e.Message.Id, messageSessionId ?? string.Empty, workerSessionId);
+            }
+            else
+            {
+                Logger.DebugFormat("SKIPPED Ready message for message with id {0} because of sessionId mismatch. MessageSessionId {1}, WorkerSessionId {2}", e.Message.Id, messageSessionId ?? string.Empty, workerSessionId);
             }
         }
 
@@ -67,5 +73,6 @@ namespace NServiceBus.Distributor.MSMQ.ReadyMessages
 
         ITransport transport;
         string workerSessionId = Guid.NewGuid().ToString();
+        static readonly ILog Logger = LogManager.GetLogger(typeof(ReadyMessageSender));
     }
 }

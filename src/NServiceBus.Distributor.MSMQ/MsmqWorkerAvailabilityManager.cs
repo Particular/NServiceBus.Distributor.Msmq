@@ -125,7 +125,7 @@ namespace NServiceBus.Distributor.MSMQ
                     // Distributor could have been restarted, hence the reason we do not have the worker registered.
                     registeredWorkerAddresses[address] = sessionId;
 
-                    Logger.InfoFormat("Worker at '{0}' has been re-registered with distributor.", address);
+                    Logger.InfoFormat("Worker at '{0}' has been re-registered with distributor. New sessionId is {1}.", address, sessionId);
                 }
 
                 return new Worker(address, sessionId);
@@ -140,6 +140,8 @@ namespace NServiceBus.Distributor.MSMQ
         public void WorkerAvailable(Worker worker)
         {
             string sessionId;
+
+            Logger.InfoFormat("Worker at '{0}' with sessionId {1} wants to take on more work.", worker.Address, worker.SessionId);
 
             if (!registeredWorkerAddresses.TryGetValue(worker.Address, out sessionId))
             {
@@ -179,7 +181,7 @@ namespace NServiceBus.Distributor.MSMQ
 
             registeredWorkerAddresses[worker.Address] = worker.SessionId;
 
-            Logger.InfoFormat("Worker at '{0}' has been registered with {1} capacity.", worker.Address, capacity);
+            Logger.InfoFormat("Worker at '{0}' with sessionId {2} has been registered with {1} capacity.", worker.Address, capacity, worker.SessionId);
         }
 
         [ObsoleteEx(RemoveInVersion = "6.0", TreatAsErrorFromVersion = "6.0")]
