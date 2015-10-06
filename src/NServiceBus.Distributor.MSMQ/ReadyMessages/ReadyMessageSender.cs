@@ -62,7 +62,7 @@ namespace NServiceBus.Distributor.MSMQ.ReadyMessages
 
             if (isStarting)
             {
-                readyMessage.Headers.Add(Headers.WorkerStarting, Boolean.TrueString);
+                readyMessage.Headers.Add(Headers.WorkerStarting, bool.TrueString);
             }
 
             MessageSender.Send(readyMessage, new SendOptions(DistributorControlAddress)

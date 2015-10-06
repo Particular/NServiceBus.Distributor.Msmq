@@ -16,15 +16,15 @@ namespace NServiceBus.Distributor.MSMQ
 
         public DistributorReadyMessageProcessor(IBuilder builder, ReadOnlySettings settings)
         {
-            disable = !settings.GetOrDefault<bool>("Distributor.Enabled");
+            Disabled = !settings.GetOrDefault<bool>("Distributor.Enabled");
 
-            if (disable)
+            if (Disabled)
             {
                 return;
             }
 
             workerAvailabilityManager = builder.Build<IWorkerAvailabilityManager>();
-            address = MasterNodeConfiguration.GetMasterNodeAddress(settings).SubScope("distributor.control");
+            InputAddress = MasterNodeConfiguration.GetMasterNodeAddress(settings).SubScope("distributor.control");
         }
 
         /// <summary>
@@ -54,18 +54,12 @@ namespace NServiceBus.Distributor.MSMQ
         /// <summary>
         ///     The <see cref="NServiceBus.Address" /> for this <see cref="ISatellite" /> to use when receiving messages.
         /// </summary>
-        public Address InputAddress
-        {
-            get { return address; }
-        }
+        public Address InputAddress { get; }
 
         /// <summary>
         ///     Set to <code>true</code> to disable this <see cref="ISatellite" />.
         /// </summary>
-        public bool Disabled
-        {
-            get { return disable; }
-        }
+        public bool Disabled { get; }
 
         /// <summary>
         ///     Starts the <see cref="ISatellite" />.
@@ -73,10 +67,7 @@ namespace NServiceBus.Distributor.MSMQ
         public void Start()
         {
             var msmqWorkerAvailabilityManager = workerAvailabilityManager as MsmqWorkerAvailabilityManager;
-            if (msmqWorkerAvailabilityManager != null)
-            {
-                msmqWorkerAvailabilityManager.Init();
-            }
+            msmqWorkerAvailabilityManager?.Init();
         }
 
         /// <summary>
@@ -116,7 +107,7 @@ namespace NServiceBus.Distributor.MSMQ
             string messageSessionId;
             if (!controlMessage.Headers.TryGetValue(Headers.WorkerSessionId, out messageSessionId))
             {
-                messageSessionId = String.Empty;
+                messageSessionId = string.Empty;
             }
 
             if (controlMessage.Headers.ContainsKey(Headers.WorkerStarting))
@@ -130,8 +121,5 @@ namespace NServiceBus.Distributor.MSMQ
 
             workerAvailabilityManager.WorkerAvailable(new Worker(replyToAddress, messageSessionId));
         }
-
-        readonly Address address;
-        readonly bool disable;
     }
 }

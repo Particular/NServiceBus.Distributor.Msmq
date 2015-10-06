@@ -57,13 +57,13 @@ namespace NServiceBus.Distributor.MSMQ
                 {
                     if (ex.MessageQueueErrorCode == MessageQueueErrorCode.QueueNotFound)
                     {
-                        throw new Exception(string.Format("Queue [{0}] does not exist.", path));
+                        throw new Exception($"Queue [{path}] does not exist.");
                     }
                 }
 
                 if ((!transactional) && (configure.Settings.Get<bool>("Transactions.Enabled")))
                 {
-                    throw new Exception(string.Format("Queue [{0}] must be transactional.", path));
+                    throw new Exception($"Queue [{path}] must be transactional.");
                 }
             }
         }
@@ -114,7 +114,7 @@ namespace NServiceBus.Distributor.MSMQ
                 string registeredWorkerSessionId;
                 var sessionId = availableWorker.Label;
 
-                if (String.IsNullOrEmpty(sessionId)) //Old worker
+                if (string.IsNullOrEmpty(sessionId)) //Old worker
                 {
                     Logger.InfoFormat("Using an old version Worker at '{0}'.", address);
                     return new Worker(address, sessionId);
@@ -172,7 +172,7 @@ namespace NServiceBus.Distributor.MSMQ
         public void RegisterNewWorker(Worker worker, int capacity)
         {
             // Need to handle backwards compatibility
-            if (worker.SessionId == String.Empty)
+            if (worker.SessionId == string.Empty)
             {
                 ClearAvailabilityForWorker(worker.Address);
             }

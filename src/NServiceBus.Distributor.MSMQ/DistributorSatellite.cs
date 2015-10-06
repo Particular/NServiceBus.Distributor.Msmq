@@ -21,33 +21,27 @@ namespace NServiceBus.Distributor.MSMQ
 
         public DistributorSatellite(IBuilder builder, ReadOnlySettings settings)
         {
-            disable = !settings.GetOrDefault<bool>("Distributor.Enabled");
+            Disabled = !settings.GetOrDefault<bool>("Distributor.Enabled");
 
-            if (disable)
+            if (Disabled)
             {
                 return;
             }
 
             messageSender = builder.Build<ISendMessages>();
             workerManager = builder.Build<IWorkerAvailabilityManager>();
-            address = MasterNodeConfiguration.GetMasterNodeAddress(settings);
+            InputAddress = MasterNodeConfiguration.GetMasterNodeAddress(settings);
         }
 
         /// <summary>
-        ///     The <see cref="address" /> for this <see cref="ISatellite" /> to use when receiving messages.
+        ///     The <see cref="InputAddress" /> for this <see cref="ISatellite" /> to use when receiving messages.
         /// </summary>
-        public Address InputAddress
-        {
-            get { return address; }
-        }
+        public Address InputAddress { get; }
 
         /// <summary>
         ///     Set to <code>true</code> to disable this <see cref="ISatellite" />.
         /// </summary>
-        public bool Disabled
-        {
-            get { return disable; }
-        }
+        public bool Disabled { get; }
 
         /// <summary>
         ///     Starts the Distributor.
@@ -55,10 +49,7 @@ namespace NServiceBus.Distributor.MSMQ
         public void Start()
         {
             var msmqWorkerAvailabilityManager = workerManager as MsmqWorkerAvailabilityManager;
-            if (msmqWorkerAvailabilityManager != null)
-            {
-                msmqWorkerAvailabilityManager.Init();
-            }
+            msmqWorkerAvailabilityManager?.Init();
         }
 
         /// <summary>
@@ -101,8 +92,5 @@ namespace NServiceBus.Distributor.MSMQ
         }
 
         static readonly ILog Logger = LogManager.GetLogger(typeof(DistributorSatellite));
-
-        readonly Address address;
-        readonly bool disable;
     }
 }

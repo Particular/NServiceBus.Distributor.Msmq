@@ -20,7 +20,7 @@ namespace NServiceBus.Distributor.MSMQ.QueueCreators
                 return;
             }
 
-            address = config.LocalAddress.SubScope("distributor.storage");
+            Address = config.LocalAddress.SubScope("distributor.storage");
         }
 
         public bool ShouldCreateQueue()
@@ -31,12 +31,8 @@ namespace NServiceBus.Distributor.MSMQ.QueueCreators
         /// <summary>
         ///     Address of Distributor storage queue.
         /// </summary>
-        public Address Address
-        {
-            get { return address; }
-        }
+        public Address Address { get; }
 
-        Address address;
         bool disabled;
     }
 }
