@@ -27,7 +27,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <DocumentationFile>..\..\binaries\NServiceBus.Distributor.MSMQ.XML</DocumentationFile>
+    <DocumentationFile>..\..\binaries\NServiceBus.Distributor.MSMQ.xml</DocumentationFile>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <NoWarn>
     </NoWarn>
@@ -41,7 +41,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <DocumentationFile>..\..\binaries\NServiceBus.Distributor.MSMQ.XML</DocumentationFile>
+    <DocumentationFile>..\..\binaries\NServiceBus.Distributor.MSMQ.xml</DocumentationFile>
     <NoWarn>612,618</NoWarn>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
