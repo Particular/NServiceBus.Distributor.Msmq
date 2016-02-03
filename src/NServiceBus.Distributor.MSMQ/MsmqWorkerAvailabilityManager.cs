@@ -116,9 +116,9 @@ namespace NServiceBus.Distributor.MSMQ
 
                 return new Worker(address, sessionId);
             }
-            catch (MessageQueueException e)
+            catch (MessageQueueException e) when (e.MessageQueueErrorCode == MessageQueueErrorCode.IOTimeout)
             {
-                Logger.InfoFormat("NextAvailableWorker Exception", e);
+                Logger.Debug("NextAvailableWorker IOTimeout");
                 return null;
             }
         }
