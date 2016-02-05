@@ -127,19 +127,10 @@ namespace NServiceBus.Distributor.MSMQ
         {
             string sessionId;
 
-            if (!registeredWorkerAddresses.TryGetValue(worker.Address, out sessionId))
-            {
-                // The worker send us a message before the "WorkerStarting" message
-                Logger.InfoFormat("Dropping ready message from Worker at '{0}', because this worker worker sent us a message before the 'WorkerStarting' message.", worker.Address);
-
-                return;
-            }
-
-            if (sessionId.Equals("disconnected"))
+            if (registeredWorkerAddresses.TryGetValue(worker.Address, out sessionId) && sessionId.Equals("disconnected"))
             {
                 // Drop ready message as this worker has been disconnected 
                 Logger.InfoFormat("Dropping ready message from Worker at '{0}', because this worker has been disconnected.", worker.Address);
-
                 return;
             }
 
