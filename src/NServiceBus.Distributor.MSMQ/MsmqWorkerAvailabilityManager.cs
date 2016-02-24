@@ -111,7 +111,6 @@ namespace NServiceBus.Distributor.MSMQ
                 }
 
                 var address = MsmqUtilities.GetIndependentAddressForQueue(availableWorker.ResponseQueue);
-                string registeredWorkerSessionId;
                 var sessionId = availableWorker.Label;
 
                 if (string.IsNullOrEmpty(sessionId)) //Old worker
@@ -120,42 +119,22 @@ namespace NServiceBus.Distributor.MSMQ
                     return new Worker(address, sessionId);
                 }
 
-                if (!registeredWorkerAddresses.TryGetValue(address, out registeredWorkerSessionId))
-                {
-                    // Distributor could have been restarted, hence the reason we do not have the worker registered.
-                    registeredWorkerAddresses[address] = sessionId;
-
-                    Logger.InfoFormat("Worker at '{0}' has been re-registered with distributor. New sessionId is {1}.", address, sessionId);
-                }
-
                 return new Worker(address, sessionId);
             }
-            catch (MessageQueueException e)
+            catch (MessageQueueException e) when (e.MessageQueueErrorCode == MessageQueueErrorCode.IOTimeout)
             {
-                Logger.InfoFormat("NextAvailableWorker Exception", e);
+                Logger.Debug("NextAvailableWorker IOTimeout");
                 return null;
             }
         }
 
         public void WorkerAvailable(Worker worker)
         {
-            string sessionId;
+            var address = worker.Address;
 
-            Logger.InfoFormat("Worker at '{0}' with sessionId {1} wants to take on more work.", worker.Address, worker.SessionId);
-
-            if (!registeredWorkerAddresses.TryGetValue(worker.Address, out sessionId))
+            if (disconnectedWorkers.Contains(address))
             {
-                // The worker send us a message before the "WorkerStarting" message
-                Logger.InfoFormat("Dropping ready message from Worker at '{0}', because this worker worker sent us a message before the 'WorkerStarting' message.", worker.Address);
-
-                return;
-            }
-
-            if (sessionId.Equals("disconnected"))
-            {
-                // Drop ready message as this worker has been disconnected 
-                Logger.InfoFormat("Dropping ready message from Worker at '{0}', because this worker has been disconnected.", worker.Address);
-
+                Logger.InfoFormat("Worker at '{0}' has been diconnected. Not adding a storage entry.", address);
                 return;
             }
 
@@ -166,7 +145,9 @@ namespace NServiceBus.Distributor.MSMQ
 
         public void UnregisterWorker(Address address)
         {
-            registeredWorkerAddresses[address] = "disconnected";
+            disconnectedWorkers.Add(address);
+            ClearAvailabilityForWorker(address);
+            Logger.Info($"Worker at '{address}' has been disconnected. All storage entries cleared.");
         }
 
         public void RegisterNewWorker(Worker worker, int capacity)
@@ -179,23 +160,23 @@ namespace NServiceBus.Distributor.MSMQ
 
             AddWorkerToStorageQueue(worker, capacity);
 
-            registeredWorkerAddresses[worker.Address] = worker.SessionId;
+            disconnectedWorkers.Remove(worker.Address);
 
-            Logger.InfoFormat("Worker at '{0}' with sessionId {2} has been registered with {1} capacity.", worker.Address, capacity, worker.SessionId);
+            Logger.InfoFormat("Worker at '{0}' has been registered with {1} capacity.", worker.Address, capacity);
         }
 
-        [ObsoleteEx(RemoveInVersion = "6.0", TreatAsErrorFromVersion = "6.0")]
         void ClearAvailabilityForWorker(Address address)
         {
             storageLock.EnterWriteLock();
 
             try
             {
-                var messages = storageQueue.GetAllMessages();
+                var messages = storageQueue
+                    .GetAllMessages()
+                    .Where(m => MsmqUtilities.GetIndependentAddressForQueue(m.ResponseQueue) == address)
+                    .ToList();
 
-                Logger.InfoFormat("Clearing availability for worker {0} with {1} messages", address, messages.Count());
-
-                foreach (var m in messages.Where(m => MsmqUtilities.GetIndependentAddressForQueue(m.ResponseQueue) == address))
+                foreach (var m in messages)
                 {
                     if (unitOfWork.HasActiveTransaction())
                     {
@@ -206,6 +187,8 @@ namespace NServiceBus.Distributor.MSMQ
                         storageQueue.ReceiveById(m.Id, MessageQueueTransactionType.Automatic);
                     }
                 }
+
+                Logger.Info($"Cleared {messages.Count} storage entries for worker {address}");
             }
             finally
             {
@@ -241,7 +224,7 @@ namespace NServiceBus.Distributor.MSMQ
 
         static TimeSpan MaxTimeToWaitForAvailableWorker = TimeSpan.FromSeconds(10);
         ReaderWriterLockSlim storageLock = new ReaderWriterLockSlim();
-        Dictionary<Address, string> registeredWorkerAddresses = new Dictionary<Address, string>();
+        HashSet<Address> disconnectedWorkers = new HashSet<Address>();
         MessageQueue storageQueue;
         object lockObj = new object();
     }
