@@ -35,7 +35,7 @@ namespace NServiceBus
             return new Address(settings.EndpointName(), masterNode);
         }
 
-        private static void ValidateHostName(string hostName)
+        static void ValidateHostName(string hostName)
         {
             if (Uri.CheckHostName(hostName) == UriHostNameType.Unknown)
             {

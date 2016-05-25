@@ -2,9 +2,7 @@ namespace NServiceBus.Distributor.MSMQ.QueueCreators
 {
     using Unicast.Queuing;
 
-    /// <summary>
-    ///     Signal to create the queue for the worker
-    /// </summary>
+    // Signal to create the queue for the worker
     class WorkerQueueCreator : IWantQueueCreated
     {
         public bool WorkerEnabled { get; set; }
@@ -16,9 +14,7 @@ namespace NServiceBus.Distributor.MSMQ.QueueCreators
             return DistributorEnabled && WorkerEnabled;
         }
 
-        /// <summary>
-        ///     Address of worker queue
-        /// </summary>
+        // Address of worker queue
         public Address Address { get; set; }
     }
 }

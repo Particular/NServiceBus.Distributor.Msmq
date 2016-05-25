@@ -49,7 +49,7 @@
         {
             var foundTransportDefinitions = TypeScanner.GetAllTypesAssignableTo<TransportDefinition>();
 
-            
+
             foreach (var transportDefinitionType in foundTransportDefinitions)
             {
                 var key = transportDefinitionType.Name;
@@ -88,7 +88,7 @@
             {
                 {"RabbitMQTransport", "host=localhost"},
                 {"SqlServerTransport", @"Server=localhost\sqlexpress;Database=nservicebus;Trusted_Connection=True;"},
-                {"MsmqTransport", @"cacheSendConnection=false;journal=false;"}
+                {"MsmqTransport", "cacheSendConnection=false;journal=false;"}
             };
 
 

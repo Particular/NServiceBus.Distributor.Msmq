@@ -8,9 +8,9 @@
     using Hosting.Helpers;
     using Logging;
     using NServiceBus;
-    using NServiceBus.AcceptanceTesting;
-    using NServiceBus.Config.ConfigurationSource;
-    using NServiceBus.Configuration.AdvanceExtensibility;
+    using AcceptanceTesting;
+    using Config.ConfigurationSource;
+    using Configuration.AdvanceExtensibility;
 
     public class DefaultServer : IEndpointSetupTemplate
     {

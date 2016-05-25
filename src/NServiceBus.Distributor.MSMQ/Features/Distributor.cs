@@ -14,15 +14,14 @@ namespace NServiceBus.Distributor.MSMQ
         {
             Defaults(s => s.Set("Distributor.Enabled", true));
         }
-
         /// <summary>
-        /// Called when the features is activated
+        /// <see cref="Feature.Setup"/>
         /// </summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
             var endpointName = context.Settings.EndpointName();
             var applicativeInputQueue = Address.Parse(endpointName).SubScope("worker");
-         
+
             context.Container.ConfigureComponent<UnicastBus>(DependencyLifecycle.SingleInstance)
                 .ConfigureProperty(r => r.InputAddress, applicativeInputQueue)
                 .ConfigureProperty(r => r.DoNotStartTransport, !context.Settings.GetOrDefault<bool>("Distributor.WithWorker"));

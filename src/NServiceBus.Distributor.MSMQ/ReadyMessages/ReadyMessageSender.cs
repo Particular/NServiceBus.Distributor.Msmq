@@ -2,12 +2,12 @@ namespace NServiceBus.Distributor.MSMQ.ReadyMessages
 {
     using System;
     using Features;
-    using NServiceBus.Logging;
+    using Logging;
     using Transports;
     using Unicast;
     using Unicast.Transport;
 
-    internal class ReadyMessageSender : FeatureStartupTask
+    class ReadyMessageSender : FeatureStartupTask
     {
         public ISendMessages MessageSender { get; set; }
 
@@ -39,7 +39,7 @@ namespace NServiceBus.Distributor.MSMQ.ReadyMessages
             string messageSessionId;
             e.Message.Headers.TryGetValue(Headers.WorkerSessionId, out messageSessionId);
             Logger.DebugFormat("Got message with id {0} and messageSessionId {1}. WorkerSessionId is {2}", e.Message.Id, messageSessionId ?? string.Empty, workerSessionId);
-            //If the message we are processing contains an old sessionid then we do not send an extra control message 
+            //If the message we are processing contains an old sessionid then we do not send an extra control message
             //otherwise that would cause https://github.com/Particular/NServiceBus/issues/978
             if (messageSessionId == workerSessionId)
             {

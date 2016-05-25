@@ -1,18 +1,15 @@
 namespace NServiceBus.Distributor.MSMQ
 {
     using System;
-    using NServiceBus.ObjectBuilder;
+    using ObjectBuilder;
     using ReadyMessages;
     using Satellites;
     using Settings;
     using Unicast.Transport;
 
-    /// <summary>
-    ///     Part of the Distributor infrastructure.
-    /// </summary>
-    internal class DistributorReadyMessageProcessor : IAdvancedSatellite
+    class DistributorReadyMessageProcessor : IAdvancedSatellite
     {
-        readonly IWorkerAvailabilityManager workerAvailabilityManager;
+        IWorkerAvailabilityManager workerAvailabilityManager;
 
         public DistributorReadyMessageProcessor(IBuilder builder, ReadOnlySettings settings)
         {
@@ -27,12 +24,6 @@ namespace NServiceBus.Distributor.MSMQ
             InputAddress = MasterNodeConfiguration.GetMasterNodeAddress(settings).SubScope("distributor.control");
         }
 
-        /// <summary>
-        ///     This method is called when a message is available to be processed.
-        /// </summary>
-        /// <param name="message">
-        ///     The <see cref="TransportMessage" /> received.
-        /// </param>
         public bool Handle(TransportMessage message)
         {
             if (!IsControlMessage(message))
@@ -51,28 +42,16 @@ namespace NServiceBus.Distributor.MSMQ
             return true;
         }
 
-        /// <summary>
-        ///     The <see cref="NServiceBus.Address" /> for this <see cref="ISatellite" /> to use when receiving messages.
-        /// </summary>
         public Address InputAddress { get; }
 
-        /// <summary>
-        ///     Set to <code>true</code> to disable this <see cref="ISatellite" />.
-        /// </summary>
         public bool Disabled { get; }
 
-        /// <summary>
-        ///     Starts the <see cref="ISatellite" />.
-        /// </summary>
         public void Start()
         {
             var msmqWorkerAvailabilityManager = workerAvailabilityManager as MsmqWorkerAvailabilityManager;
             msmqWorkerAvailabilityManager?.Init();
         }
 
-        /// <summary>
-        ///     Stops the <see cref="ISatellite" />.
-        /// </summary>
         public void Stop()
         {
         }
