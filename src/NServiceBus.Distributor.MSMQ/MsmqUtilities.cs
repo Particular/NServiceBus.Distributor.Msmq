@@ -6,15 +6,10 @@ namespace NServiceBus.Distributor.MSMQ
     using System.Security.Cryptography;
     using System.Text;
 
-    /// <summary>
-    ///     MSMQ-related utility functions
-    /// </summary>
     class MsmqUtilities
     {
-        /// <summary>
-        ///     Turns a '@' separated value into a full path.
-        ///     Format is 'queue@machine', or 'queue@ipaddress'
-        /// </summary>
+        // Turns a '@' separated value into a full path.
+        // Format is 'queue@machine', or 'queue@ipaddress'
         public static string GetFullPath(Address value)
         {
             IPAddress ipAddress;
@@ -90,6 +85,6 @@ namespace NServiceBus.Distributor.MSMQ
         const string DIRECTPREFIX_TCP = "DIRECT=TCP:";
         const string PREFIX_TCP = "FormatName:" + DIRECTPREFIX_TCP;
         const string PREFIX = "FormatName:" + DIRECTPREFIX;
-        internal const string PRIVATE = "\\private$\\";
+        const string PRIVATE = "\\private$\\";
     }
 }

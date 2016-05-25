@@ -5,8 +5,8 @@ namespace NServiceBus.Distributor.MSMQ
     using System.Net;
     using Features;
     using NServiceBus.Config;
-    using NServiceBus.Logging;
-    using NServiceBus.Settings;
+    using Logging;
+    using Settings;
     using QueueCreators;
     using ReadyMessages;
 
@@ -42,7 +42,7 @@ namespace NServiceBus.Distributor.MSMQ
         }
 
         /// <summary>
-        /// Called when the features is activated
+        /// <see cref="Feature.Setup"/>
         /// </summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
@@ -54,8 +54,8 @@ namespace NServiceBus.Distributor.MSMQ
                 {
                     ValidateMasterNodeAddress(context.Settings);
                 }
-            } 
-            
+            }
+
             var masterNodeAddress = MasterNodeConfiguration.GetMasterNodeAddress(context.Settings);
 
             var distributorControlAddress = masterNodeAddress.SubScope("distributor.control");
