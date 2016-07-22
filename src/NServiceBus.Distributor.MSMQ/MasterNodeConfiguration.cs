@@ -9,8 +9,12 @@ namespace NServiceBus
     {
         public static string GetMasterNode(ReadOnlySettings settings)
         {
+            if (settings.GetOrDefault<bool>("Distributor.WithWorker"))
+            {
+                return null;
+            }
             var section = settings.GetConfigSection<MasterNodeConfig>();
-            return section != null ? section.Node : null;
+            return section?.Node;
         }
 
         public static Address GetMasterNodeAddress(ReadOnlySettings settings)
