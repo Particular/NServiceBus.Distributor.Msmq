@@ -2,11 +2,11 @@ namespace NServiceBus.AcceptanceTests.EndpointTemplates
 {
     using System;
     using System.Collections.Generic;
-    using NServiceBus.AcceptanceTesting;
-    using NServiceBus.AcceptanceTesting.Support;
-    using NServiceBus.Config.ConfigurationSource;
-    using NServiceBus.Pipeline;
-    using NServiceBus.Pipeline.Contexts;
+    using AcceptanceTesting;
+    using AcceptanceTesting.Support;
+    using Config.ConfigurationSource;
+    using Pipeline;
+    using Pipeline.Contexts;
 
     public class DefaultPublisher : IEndpointSetupTemplate
     {
@@ -31,14 +31,14 @@ namespace NServiceBus.AcceptanceTests.EndpointTemplates
 
                 if (context.TryGet("SubscribersForEvent", out  subscribers))
                 {
-                    Context.AddTrace(string.Format("Subscribers for {0} : {1}", context.OutgoingLogicalMessage.MessageType.Name, string.Join(";", subscribers)));
+                    Context.AddTrace($"Subscribers for {context.OutgoingLogicalMessage.MessageType.Name} : {string.Join(";", subscribers)}");
                 }
 
                 bool nosubscribers;
 
                 if (context.TryGet("NoSubscribersFoundForMessage", out nosubscribers) && nosubscribers)
                 {
-                    Context.AddTrace(string.Format("No Subscribers found for message {0}", context.OutgoingLogicalMessage.MessageType.Name));
+                    Context.AddTrace($"No Subscribers found for message {context.OutgoingLogicalMessage.MessageType.Name}");
                 }
             }
 

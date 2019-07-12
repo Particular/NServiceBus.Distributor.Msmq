@@ -1,6 +1,6 @@
 namespace NServiceBus.Distributor.MSMQ.ReadyMessages
 {
-    internal static class Headers
+    static class Headers
     {
         public const string WorkerCapacityAvailable = "NServiceBus.Distributor.WorkerCapacityAvailable";
         public const string WorkerStarting = "NServiceBus.Distributor.WorkerStarting";

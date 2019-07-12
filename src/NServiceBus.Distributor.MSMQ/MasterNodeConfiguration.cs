@@ -22,7 +22,7 @@ namespace NServiceBus
             var unicastBusConfig = settings.GetConfigSection<UnicastBusConfig>();
 
             //allow users to override data address in config
-            if (unicastBusConfig != null && !string.IsNullOrWhiteSpace(unicastBusConfig.DistributorDataAddress))
+            if (!string.IsNullOrWhiteSpace(unicastBusConfig?.DistributorDataAddress))
             {
                 return Address.Parse(unicastBusConfig.DistributorDataAddress);
             }
@@ -39,11 +39,11 @@ namespace NServiceBus
             return new Address(settings.EndpointName(), masterNode);
         }
 
-        private static void ValidateHostName(string hostName)
+        static void ValidateHostName(string hostName)
         {
             if (Uri.CheckHostName(hostName) == UriHostNameType.Unknown)
             {
-                throw new ConfigurationErrorsException(string.Format("The 'Node' entry in MasterNodeConfig section of the configuration file: '{0}' is not a valid DNS name.", hostName));
+                throw new ConfigurationErrorsException($"The 'Node' entry in MasterNodeConfig section of the configuration file: '{hostName}' is not a valid DNS name.");
             }
         }
     }

@@ -1,16 +1,12 @@
 namespace NServiceBus.Distributor.MSMQ.QueueCreators
 {
-    using NServiceBus.ObjectBuilder;
+    using ObjectBuilder;
     using Unicast.Queuing;
 
-    /// <summary>
-    ///     Signal to create the queue to store worker availability information.
-    /// </summary>
-    internal class DistributorStorageQueueCreator : IWantQueueCreated
+    // Signal to create the queue to store worker availability information.
+    class DistributorStorageQueueCreator : IWantQueueCreated
     {
-        /// <summary>
-        ///     Holds storage queue address.
-        /// </summary>
+        // Holds storage queue address.
         public DistributorStorageQueueCreator(Configure config, IConfigureComponents container)
         {
             disabled = !container.HasComponent<MsmqWorkerAvailabilityManager>();
@@ -20,7 +16,7 @@ namespace NServiceBus.Distributor.MSMQ.QueueCreators
                 return;
             }
 
-            address = config.LocalAddress.SubScope("distributor.storage");
+            Address = config.LocalAddress.SubScope("distributor.storage");
         }
 
         public bool ShouldCreateQueue()
@@ -28,15 +24,9 @@ namespace NServiceBus.Distributor.MSMQ.QueueCreators
             return !disabled;
         }
 
-        /// <summary>
-        ///     Address of Distributor storage queue.
-        /// </summary>
-        public Address Address
-        {
-            get { return address; }
-        }
+        // Address of Distributor storage queue.
+        public Address Address { get; }
 
-        Address address;
         bool disabled;
     }
 }

@@ -1,13 +1,12 @@
 namespace NServiceBus.Distributor.MSMQ
 {
-    using System;
     using System.Configuration;
     using System.Linq;
     using System.Net;
     using Features;
     using NServiceBus.Config;
-    using NServiceBus.Logging;
-    using NServiceBus.Settings;
+    using Logging;
+    using Settings;
     using QueueCreators;
     using ReadyMessages;
 
@@ -34,7 +33,7 @@ namespace NServiceBus.Distributor.MSMQ
             {
                 var workerName = ConfigurationManager.AppSettings.Get("NServiceBus/Distributor/WorkerNameToUseWhileTesting");
 
-                if (!String.IsNullOrEmpty(workerName))
+                if (!string.IsNullOrEmpty(workerName))
                 {
                     s.Set("NServiceBus.LocalAddress", workerName);
                 }
@@ -43,7 +42,7 @@ namespace NServiceBus.Distributor.MSMQ
         }
 
         /// <summary>
-        /// Called when the features is activated
+        /// <see cref="Feature.Setup"/>
         /// </summary>
         protected override void Setup(FeatureConfigurationContext context)
         {
@@ -51,12 +50,12 @@ namespace NServiceBus.Distributor.MSMQ
             {
                 var workerName = ConfigurationManager.AppSettings.Get("NServiceBus/Distributor/WorkerNameToUseWhileTesting");
 
-                if (String.IsNullOrEmpty(workerName))
+                if (string.IsNullOrEmpty(workerName))
                 {
                     ValidateMasterNodeAddress(context.Settings);
                 }
-            } 
-            
+            }
+
             var masterNodeAddress = MasterNodeConfiguration.GetMasterNodeAddress(context.Settings);
 
             var distributorControlAddress = masterNodeAddress.SubScope("distributor.control");
@@ -64,7 +63,7 @@ namespace NServiceBus.Distributor.MSMQ
             var unicastBusConfig = context.Settings.GetConfigSection<UnicastBusConfig>();
 
             //allow users to override control address in config
-            if (unicastBusConfig != null && !string.IsNullOrWhiteSpace(unicastBusConfig.DistributorControlAddress))
+            if (!string.IsNullOrWhiteSpace(unicastBusConfig?.DistributorControlAddress))
             {
                 distributorControlAddress = Address.Parse(unicastBusConfig.DistributorControlAddress);
             }
@@ -96,13 +95,13 @@ namespace NServiceBus.Distributor.MSMQ
             switch (IsLocalIpAddress(masterNodeName))
             {
                 case true:
-                    throw new ConfigurationErrorsException(string.Format("'MasterNodeConfig.Node' points to a local host name: [{0}]", masterNodeName));
+                    throw new ConfigurationErrorsException($"'MasterNodeConfig.Node' points to a local host name: [{masterNodeName}]");
                 case false:
                     logger.InfoFormat("'MasterNodeConfig.Node' points to a non-local valid host name: [{0}].", masterNodeName);
                     break;
                 case null:
                     throw new ConfigurationErrorsException(
-                        string.Format("'MasterNodeConfig.Node' entry should point to a valid host name. Currently it is: [{0}].", masterNodeName));
+                        $"'MasterNodeConfig.Node' entry should point to a valid host name. Currently it is: [{masterNodeName}].");
             }
         }
 

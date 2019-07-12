@@ -9,11 +9,9 @@ namespace NServiceBus.Distributor.MSMQ
     using Logging;
     using Transports.Msmq;
 
-    /// <summary>
-    ///     An implementation of <see cref="IWorkerAvailabilityManager" /> for MSMQ to be used
-    ///     with the <see cref="DistributorSatellite" /> class.
-    /// </summary>
-    internal class MsmqWorkerAvailabilityManager : IWorkerAvailabilityManager, IDisposable
+    // An implementation of <see cref="IWorkerAvailabilityManager" /> for MSMQ to be used
+    // with the <see cref="DistributorSatellite" /> class.
+    class MsmqWorkerAvailabilityManager : IWorkerAvailabilityManager, IDisposable
     {
         readonly Configure configure;
         MsmqUnitOfWork unitOfWork;
@@ -47,7 +45,21 @@ namespace NServiceBus.Distributor.MSMQ
                     MessageReadPropertyFilter = messageReadPropertyFilter
                 };
 
-                if ((!storageQueue.Transactional) && (configure.Settings.Get<bool>("Transactions.Enabled")))
+                var transactional = false;
+
+                try
+                {
+                    transactional = storageQueue.Transactional;
+                }
+                catch (MessageQueueException ex)
+                {
+                    if (ex.MessageQueueErrorCode == MessageQueueErrorCode.QueueNotFound)
+                    {
+                        throw new Exception($"Queue [{path}] does not exist.");
+                    }
+                }
+
+                if ((!transactional) && (configure.Settings.Get<bool>("Transactions.Enabled")))
                 {
                     throw new Exception($"Queue [{path}] must be transactional.");
                 }
@@ -59,10 +71,7 @@ namespace NServiceBus.Distributor.MSMQ
             //Injected
         }
 
-        /// <summary>
-        ///     Pops the next available worker from the available worker queue
-        ///     and returns its address.
-        /// </summary>
+        // Pops the next available worker from the available worker queue and returns its address.
         [DebuggerNonUserCode]
         public Worker NextAvailableWorker()
         {
@@ -206,7 +215,7 @@ namespace NServiceBus.Distributor.MSMQ
             }
         }
 
-        static readonly ILog Logger = LogManager.GetLogger(typeof(MsmqWorkerAvailabilityManager));
+        static ILog Logger = LogManager.GetLogger(typeof(MsmqWorkerAvailabilityManager));
 
         static TimeSpan MaxTimeToWaitForAvailableWorker = TimeSpan.FromSeconds(10);
         ReaderWriterLockSlim storageLock = new ReaderWriterLockSlim();
